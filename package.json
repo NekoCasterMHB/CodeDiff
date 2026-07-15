@@ -1,0 +1,25 @@
+{
+  "name": "CodeDiff",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxt/ui": "^4.9.0",
+    "@nuxthub/core": "^0.10.8",
+    "diff": "^9.0.0",
+    "monaco-editor": "^0.55.1",
+    "nanoid": "^6.0.0",
+    "nuxt": "^4.4.8",
+    "vue": "^3.5.39",
+    "vue-router": "^5.1.0"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "^1.2.117"
+  }
+}
