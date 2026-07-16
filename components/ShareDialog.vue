@@ -5,30 +5,30 @@
         <!-- File Selection -->
         <div class="space-y-1.5">
           <label class="text-xs font-medium text-default">{{ $t('share.selectFiles') }}</label>
-          <div class="border border-(--ui-border) rounded-lg divide-y divide-(--ui-border) max-h-48 overflow-y-auto">
+          <div class="border border-default rounded-lg divide-y divide-default max-h-48 overflow-y-auto">
             <label
               v-for="f in filesWithContent"
               :key="f.id"
-              class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-(--ui-bg-elevated) transition-colors"
+              class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-elevated transition-colors"
             >
               <UCheckbox :model-value="selectedIds.has(f.id)" @update:model-value="toggle(f.id)" />
-              <UIcon :name="fileIcon(f.language)" class="w-3.5 h-3.5 text-(--ui-text-muted) shrink-0" />
+              <UIcon :name="fileIcon(f.language)" class="w-3.5 h-3.5 text-muted shrink-0" />
               <span class="text-xs truncate">{{ f.leftPath || f.rightPath || $t('diffFile.fallbackName', { index: 1 }) }}</span>
-              <span v-if="f.leftContent !== f.rightContent" class="w-1.5 h-1.5 rounded-full bg-(--ui-warning) shrink-0 ml-auto" />
+              <span v-if="f.leftContent !== f.rightContent" class="w-1.5 h-1.5 rounded-full bg-warning shrink-0 ml-auto" />
             </label>
-            <div v-if="!filesWithContent.length" class="px-3 py-4 text-center text-xs text-(--ui-text-muted)">
+            <div v-if="!filesWithContent.length" class="px-3 py-4 text-center text-xs text-muted">
               {{ $t('share.noFiles') }}
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <UButton size="2xs" variant="ghost" class="!text-[0.65rem]" @click="selectAll">{{ $t('share.selectAll') }}</UButton>
-            <UButton size="2xs" variant="ghost" class="!text-[0.65rem]" @click="deselectAll">{{ $t('share.deselectAll') }}</UButton>
+            <UButton size="xs" variant="ghost" class="text-[0.65rem]!" @click="selectAll">{{ $t('share.selectAll') }}</UButton>
+            <UButton size="xs" variant="ghost" class="text-[0.65rem]!" @click="deselectAll">{{ $t('share.deselectAll') }}</UButton>
           </div>
         </div>
 
         <!-- Encryption info -->
-        <div class="flex items-center gap-2 text-xs text-(--ui-text-muted)">
-          <UIcon name="i-lucide-shield-check" class="w-3.5 h-3.5 text-(--ui-success)" />
+        <div class="flex items-center gap-2 text-xs text-muted">
+          <UIcon name="i-lucide-shield-check" class="w-3.5 h-3.5 text-success" />
           <span>{{ $t('share.encrypted') }}</span>
         </div>
 
@@ -41,31 +41,31 @@
               {{ copied ? $t('share.copied') : $t('share.copy') }}
             </UButton>
           </div>
-          <p class="text-xs text-(--ui-text-muted)">{{ $t('share.urlHint') }}</p>
+          <p class="text-xs text-muted">{{ $t('share.urlHint') }}</p>
         </div>
 
         <!-- Loading -->
         <div v-if="loading" class="flex items-center justify-center py-3">
-          <UIcon name="i-lucide-loader-circle" class="w-4 h-4 animate-spin text-(--ui-primary)" />
-          <span class="ml-2 text-xs text-(--ui-text-muted)">{{ $t('share.encrypting') }}</span>
+          <UIcon name="i-lucide-loader-circle" class="w-4 h-4 animate-spin text-primary" />
+          <span class="ml-2 text-xs text-muted">{{ $t('share.encrypting') }}</span>
         </div>
 
         <!-- Error -->
-        <div v-if="error" class="text-xs text-(--ui-error)">{{ error }}</div>
+        <div v-if="error" class="text-xs text-error">{{ error }}</div>
       </div>
     </template>
 
     <template #footer>
       <div class="flex justify-between items-center w-full">
-        <span class="text-xs text-(--ui-text-muted)">{{ selectedIds.size }}/{{ filesWithContent.length }} {{ $t('share.selected') }}</span>
+        <span class="text-xs text-muted">{{ selectedIds.size }}/{{ filesWithContent.length }} {{ $t('share.selected') }}</span>
         <div class="flex gap-2">
-          <UButton v-if="!shareUrl" variant="soft" color="neutral" size="sm" @click="open = false">
+          <UButton v-if="!shareUrl" variant="soft" color="neutral" size="sm" @click="() => { open = false }">
             {{ $t('share.cancel') }}
           </UButton>
           <UButton v-if="!shareUrl && !loading" icon="i-lucide-share" size="sm" @click="generateShare">
             {{ $t('share.generate') }}
           </UButton>
-          <UButton v-if="shareUrl" variant="soft" size="sm" @click="open = false">
+          <UButton v-if="shareUrl" variant="soft" size="sm" @click="() => { open = false }">
             {{ $t('share.close') }}
           </UButton>
         </div>
