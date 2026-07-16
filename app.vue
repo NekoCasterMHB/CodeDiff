@@ -69,6 +69,16 @@ if (import.meta.server) {
 }
 
 const { locale, locales, setLocale } = useI18n()
+
+// Dynamic page title
+const titles: Record<string, string> = {
+  en: 'CodeDiff - Online Code Diff Tool',
+  zh: 'CodeDiff - 在线代码差分高亮工具',
+  ja: 'CodeDiff - オンラインコード差分ツール',
+}
+useHead({
+  title: () => titles[locale.value] || titles.en,
+})
 const route = useRoute()
 const sidebarOpen = useState('sidebar-open', () => true)
 const shareOpen = ref(false)

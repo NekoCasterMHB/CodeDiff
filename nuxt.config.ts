@@ -16,8 +16,9 @@ export default defineNuxtConfig({
     defaultLocale: 'ja',
     strategy: 'no_prefix',
     locales: [
-      { code: 'zh', iso: 'zh-CN', file: 'zh.json', name: '中文', flag: '🇨🇳' },
       { code: 'ja', iso: 'ja-JP', file: 'ja.json', name: '日本語', flag: '🇯🇵' },
+      { code: 'en', iso: 'en-US', file: 'en.json', name: 'English', flag: '🇺🇸' },
+      { code: 'zh', iso: 'zh-CN', file: 'zh.json', name: '中文', flag: '🇨🇳' },
     ],
     detectBrowserLanguage: false,
   },
@@ -52,7 +53,6 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'CodeDiff - 在线代码差分高亮工具',
       meta: [
         { name: 'description', content: '在线代码差分对比工具，支持一键分享、密码加密、并排对比' },
       ],

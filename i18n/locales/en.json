@@ -1,0 +1,37 @@
+{
+  "app": { "title": "CodeDiff - Online Code Diff Tool" },
+  "header": { "share": "Share", "new": "New" },
+  "sidebar": { "title": "Files" },
+  "toolbar": { "fileName": "File name (e.g. app.ts)", "addFile": "Add File", "prevDiff": "Previous", "nextDiff": "Next" },
+  "editor": { "empty": "Add a file or drag & drop here", "dropHint": "Drop files to upload" },
+  "share": {
+    "title": "Share Diff",
+    "encrypted": "Encrypted with AES-256-GCM, password embedded in URL",
+    "urlLabel": "Share Link",
+    "urlHint": "Send this link to anyone. It will auto-decrypt on open.",
+    "encrypting": "Encrypting & saving...",
+    "cancel": "Cancel",
+    "generate": "Generate Link",
+    "close": "Close",
+    "copy": "Copy",
+    "copied": "Copied",
+    "selectFiles": "Select files to share",
+    "noFiles": "No files to share",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "selected": "selected"
+  },
+  "diffFile": { "fallbackName": "File {index}" },
+  "view": {
+    "files": "Files",
+    "back": "Back to Home",
+    "empty": "No content",
+    "loading": "Loading shared content...",
+    "noCrypto": "Your browser does not support Web Crypto API.",
+    "invalidLink": "Invalid share link.",
+    "noPassword": "Missing decryption password in link (#pwd=...).",
+    "decryptFailed": "Decryption failed. Password may be incorrect.",
+    "loadFailed": "Load failed"
+  },
+  "language": { "zh": "中文", "ja": "日本語", "en": "English" }
+}
