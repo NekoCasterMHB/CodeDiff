@@ -12,9 +12,8 @@ export default defineNuxtConfig({
   modules: ['@nuxt/ui', '@nuxthub/core', '@nuxtjs/i18n'],
 
   i18n: {
-    lazy: true,
     langDir: 'locales',
-    defaultLocale: 'zh',
+    defaultLocale: 'ja',
     strategy: 'no_prefix',
     locales: [
       { code: 'zh', iso: 'zh-CN', file: 'zh.json', name: '中文', flag: '🇨🇳' },

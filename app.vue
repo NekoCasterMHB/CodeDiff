@@ -1,6 +1,6 @@
 <template>
   <UApp>
-    <UHeader toggle-side="left" :ui="{ container: 'px-0! mx-2 w-full' }">
+    <UHeader toggle-side="left" :ui="{ header: 'px-2!', container: 'w-full! max-w-100xl' }">
       <template #left>
         <div class="flex items-center gap-2">
           <div class="w-7 h-7 rounded-lg bg-(--ui-primary) flex items-center justify-center">
@@ -22,6 +22,7 @@
       </template>
 
       <template #right>
+        <UColorModeSwitch />
         <UDropdownMenu :items="langItems" :content="{ align: 'end' }">
           <UButton
             :label="currentLang"
@@ -32,7 +33,6 @@
             class="text-xs"
           />
         </UDropdownMenu>
-        <UColorModeButton />
         <UButton
           v-if="!isViewPage"
           icon="i-lucide-share-2"
@@ -68,7 +68,7 @@ if (import.meta.server) {
   colorMode.value = 'light'
 }
 
-const { locale, locales } = useI18n()
+const { locale, locales, setLocale } = useI18n()
 const route = useRoute()
 const sidebarOpen = useState('sidebar-open', () => true)
 const shareOpen = ref(false)
@@ -84,7 +84,7 @@ const langItems = computed<DropdownMenuItem[][]>(() => [
   locales.value.map(loc => ({
     label: `${loc.flag} ${loc.name}`,
     active: locale.value === loc.code,
-    onSelect: () => { locale.value = loc.code },
+    onSelect: () => { setLocale(loc.code) },
   })),
 ])
 </script>
