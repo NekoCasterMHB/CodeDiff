@@ -40,19 +40,27 @@
       </div>
 
       <div v-else-if="activeFile" class="flex-1 flex flex-col min-h-0">
-        <!-- File name bar -->
+        <!-- File name bar + diff nav -->
         <div class="flex items-center h-8 px-3 border-b border-(--ui-border) bg-(--ui-bg-elevated) shrink-0 gap-1.5">
-          <UIcon name="i-lucide-file-text" class="w-3.5 h-3.5 text-(--ui-text-muted) mr-1.5 shrink-0" />
-          <span class="text-xs text-(--ui-text) truncate">{{ activeFile.leftPath || activeFile.rightPath || 'untitled' }}</span>
+          <UIcon name="i-lucide-file-text" class="w-3.5 h-3.5 text-(--ui-text-muted) shrink-0" />
+          <span class="text-xs text-(--ui-text) truncate flex-1">{{ activeFile.leftPath || activeFile.rightPath || 'untitled' }}</span>
+          <div class="w-px h-4 bg-(--ui-border)" />
+        <div class="flex items-center bg-(--ui-primary)/10 border border-(--ui-primary)/20 rounded-md overflow-hidden">
+          <UButton icon="i-lucide-chevron-up" size="xs" variant="ghost" color="neutral" class="hover:bg-(--ui-primary)/30 rounded-none" @click="goPrevDiff" />
+            <span class="text-xs text-(--ui-text) min-w-7 text-center font-mono">{{ diffNavText }}</span>
+          <UButton icon="i-lucide-chevron-down" size="xs" variant="ghost" color="neutral" class="hover:bg-(--ui-primary)/30 rounded-none" @click="goNextDiff" />
+          </div>
         </div>
         <div class="flex-1 relative overflow-hidden">
           <ClientOnly>
             <MonacoDiffEditor
-              :key="activeFile.id"
+              ref="monacoRef"
+              :key="editorKey"
               :left-content="activeFile.leftContent"
               :right-content="activeFile.rightContent"
               :language="activeFile.language"
               :read-only="true"
+              :lang="locale"
               :theme="editorTheme"
             />
             <template #fallback>
@@ -75,6 +83,7 @@ definePageMeta({ layout: 'view' })
 import type { DiffFile } from '~/types/diff'
 
 const route = useRoute()
+const { locale } = useI18n()
 const { decrypt, getPasswordFromHash, isCryptoAvailable } = useCrypto()
 
 const loading = ref(true)
@@ -84,6 +93,32 @@ const activeFileId = ref('')
 const activeFile = computed(() => files.value.find(f => f.id === activeFileId.value))
 const colorMode = useColorMode()
 const editorTheme = computed(() => colorMode.preference === 'dark' ? 'vs-dark' : 'vs')
+const editorKey = computed(() => `${activeFile.value?.id || 'x'}-${locale.value}`)
+const monacoRef = ref()
+const diffNavText = ref('')
+
+function goNextDiff() { monacoRef.value?.getDiffEditor()?.goToDiff('next'); updateNav() }
+function goPrevDiff() { monacoRef.value?.getDiffEditor()?.goToDiff('previous'); updateNav() }
+function updateNav() {
+  const de = monacoRef.value?.getDiffEditor()
+  if (!de) { setTimeout(updateNav, 200); return }
+  const changes = de.getLineChanges()
+  if (!changes) { setTimeout(updateNav, 200); return }
+  if (!changes.length) { diffNavText.value = '0/0'; return }
+  const pos = de.getModifiedEditor()?.getPosition()
+  if (!pos) { diffNavText.value = `0/${changes.length}`; return }
+  let idx = 0
+  for (let i = 0; i < changes.length; i++) {
+    if (changes[i].modifiedStartLineNumber > pos.lineNumber) break
+    idx = i + 1
+  }
+  diffNavText.value = `${idx}/${changes.length}`
+}
+let navTimer: ReturnType<typeof setTimeout> | null = null
+watch(() => [activeFileId.value, activeFile.value?.leftContent, activeFile.value?.rightContent], () => {
+  if (navTimer) clearTimeout(navTimer)
+  navTimer = setTimeout(updateNav, 300)
+})
 
 function fileIcon(lang: string): string {
   const m: Record<string, string> = {

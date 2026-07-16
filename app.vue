@@ -1,6 +1,6 @@
 <template>
   <UApp>
-    <UHeader toggle-side="left" :ui="{ header: 'px-2!', container: 'w-full! max-w-100xl' }">
+    <UHeader :ui="{ header: 'px-2!', container: 'w-full!' }">
       <template #left>
         <div class="flex items-center gap-2">
           <div class="w-7 h-7 rounded-lg bg-(--ui-primary) flex items-center justify-center">
@@ -8,17 +8,6 @@
           </div>
           <span class="font-bold text-lg">CodeDiff</span>
         </div>
-      </template>
-
-      <template #toggle>
-        <UButton
-          v-if="!isViewPage"
-          icon="i-lucide-panel-left"
-          color="neutral"
-          variant="ghost"
-          aria-label="Toggle sidebar"
-          @click="sidebarOpen = !sidebarOpen"
-        />
       </template>
 
       <template #right>

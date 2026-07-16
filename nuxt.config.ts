@@ -20,7 +20,13 @@ export default defineNuxtConfig({
       { code: 'en', iso: 'en-US', file: 'en.json', name: 'English', flag: '🇺🇸' },
       { code: 'zh', iso: 'zh-CN', file: 'zh.json', name: '中文', flag: '🇨🇳' },
     ],
-    detectBrowserLanguage: false,
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'codediff-locale',
+      cookieCrossOrigin: false,
+      alwaysRedirect: false,
+      redirectOn: 'root',
+    },
   },
 
   css: ['~/assets/css/main.css'],

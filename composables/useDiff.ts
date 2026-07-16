@@ -1,21 +1,114 @@
 import type { DiffFile } from '~/types/diff'
+import { toRaw } from 'vue'
+
+const DB_NAME = 'codediff-db'
+const STORE_NAME = 'files'
+const KEY_FILES = 'diff-files'
+const KEY_ACTIVE = 'diff-active'
+
+function openDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1)
+    req.onupgradeneeded = () => { req.result.createObjectStore(STORE_NAME) }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+
+async function loadFiles(): Promise<DiffFile[]> {
+  if (import.meta.server) return []
+  try {
+    const db = await openDB()
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readonly')
+      const req = tx.objectStore(STORE_NAME).get(KEY_FILES)
+      req.onsuccess = () => resolve(req.result || [])
+      req.onerror = () => reject(req.error)
+    })
+  } catch { return [] }
+}
+
+async function saveFiles(files: DiffFile[]) {
+  console.log('[CodeDiff] saveFiles called, count:', files.length, 'first:', files[0]?.leftPath || '(empty)')
+  if (import.meta.server) return
+  try {
+    const db = await openDB()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite')
+      const req = tx.objectStore(STORE_NAME).put(toRaw(files), KEY_FILES)
+      req.onsuccess = () => { console.log('[CodeDiff] saveFiles SUCCESS'); resolve() }
+      req.onerror = () => { console.error('[CodeDiff] saveFiles ERROR:', req.error); reject(req.error) }
+    })
+  } catch(e) { console.error('[CodeDiff] saveFiles CATCH:', e) }
+}
+
+async function loadActiveId(): Promise<string> {
+  if (import.meta.server) return ''
+  try {
+    const db = await openDB()
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readonly')
+      const req = tx.objectStore(STORE_NAME).get(KEY_ACTIVE)
+      req.onsuccess = () => resolve(req.result || '')
+      req.onerror = () => reject(req.error)
+    })
+  } catch { return '' }
+}
+
+async function saveActiveId(id: string) {
+  console.log('[CodeDiff] saveActiveId:', id)
+  if (import.meta.server) return
+  try {
+    const db = await openDB()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite')
+      const req = tx.objectStore(STORE_NAME).put(id, KEY_ACTIVE)
+      req.onsuccess = () => { console.log('[CodeDiff] saveActiveId SUCCESS'); resolve() }
+      req.onerror = () => { console.error('[CodeDiff] saveActiveId ERROR:', req.error); reject(req.error) }
+    })
+  } catch(e) { console.error('[CodeDiff] saveActiveId CATCH:', e) }
+}
 
 /**
- * Global diff state managed via useState (survives page navigation)
+ * Global diff state managed via useState + IndexedDB persistence
  */
 export function useDiff() {
-  const files = useState<DiffFile[]>('diff-files', () => [
-    {
-      id: '1',
-      leftPath: '',
-      rightPath: '',
-      leftContent: '',
-      rightContent: '',
-      language: 'plaintext',
-    },
-  ])
-
+  const files = useState<DiffFile[]>('diff-files', () => [])
   const activeFileId = useState<string>('diff-active-file', () => '1')
+  const initialized = ref(false)
+
+  // Load from IndexedDB on mount
+  if (!import.meta.server && !initialized.value) {
+    initialized.value = true
+    loadFiles().then(saved => {
+      files.value = saved.length > 0
+        ? saved
+        : [{ id: '1', leftPath: '', rightPath: '', leftContent: '', rightContent: '', language: 'plaintext' }]
+      loadActiveId().then(id => {
+        activeFileId.value = (id && files.value.find(f => f.id === id)) ? id : files.value[0]?.id || '1'
+      })
+      // Explicit initial save
+      saveFiles(files.value)
+      saveActiveId(activeFileId.value)
+    })
+  }
+
+  if (import.meta.server) {
+    files.value = [{ id: '1', leftPath: '', rightPath: '', leftContent: '', rightContent: '', language: 'plaintext' }]
+    activeFileId.value = '1'
+  }
+
+  // Persist to IndexedDB on changes (debounced)
+  let saveTimer: ReturnType<typeof setTimeout> | null = null
+  watch(files, (v) => {
+    if (!initialized.value || v.length === 0) return
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = setTimeout(() => saveFiles(v), 300)
+  }, { deep: true })
+  watch(activeFileId, (v) => {
+    if (!initialized.value) return
+    saveActiveId(v)
+  })
 
   const activeFile = computed(() =>
     files.value.find((f) => f.id === activeFileId.value)
@@ -52,10 +145,13 @@ export function useDiff() {
   }
 
   function updateFile(id: string, updates: Partial<DiffFile>) {
-    const file = files.value.find((f) => f.id === id)
-    if (file) {
-      Object.assign(file, updates)
-    }
+    const idx = files.value.findIndex((f) => f.id === id)
+    if (idx === -1) return
+    // Update and move to top
+    const updated = { ...files.value[idx], ...updates }
+    files.value.splice(idx, 1)
+    files.value.unshift(updated)
+    activeFileId.value = id
   }
 
   function handleFileDrop(
@@ -70,14 +166,15 @@ export function useDiff() {
       )
 
       if (emptyFile) {
+        const updates: Partial<DiffFile> = { language: detectLanguage(dropped.name) }
         if (side === 'left') {
-          emptyFile.leftContent = dropped.content
-          if (!emptyFile.leftPath) emptyFile.leftPath = dropped.name
+          updates.leftContent = dropped.content
+          if (!emptyFile.leftPath) updates.leftPath = dropped.name
         } else {
-          emptyFile.rightContent = dropped.content
-          if (!emptyFile.rightPath) emptyFile.rightPath = dropped.name
+          updates.rightContent = dropped.content
+          if (!emptyFile.rightPath) updates.rightPath = dropped.name
         }
-        emptyFile.language = detectLanguage(dropped.name)
+        updateFile(emptyFile.id, updates)
       } else {
         addFile({
           leftPath: side === 'left' ? dropped.name : '',

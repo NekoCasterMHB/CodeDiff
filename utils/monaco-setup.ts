@@ -9,6 +9,20 @@ import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
 
 let initialized = false
 
+// Monaco locale support — preload NLS message files
+const loadedLocales = new Set<string>()
+export async function loadMonacoLocale(locale: string) {
+  const map: Record<string, string> = { ja: 'ja' }
+  const file = map[locale]
+  if (!file || loadedLocales.has(file)) return
+  loadedLocales.add(file)
+  try {
+    // NLS messages must be loaded before any editor creation
+    self.MonacoEnvironment = self.MonacoEnvironment || {}
+    await import(`monaco-editor/esm/nls.messages.${file}.js`)
+  } catch {}
+}
+
 export function initMonacoWorkers() {
   if (initialized) return
   initialized = true

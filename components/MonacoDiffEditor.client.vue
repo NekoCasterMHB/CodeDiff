@@ -3,6 +3,7 @@
 </template>
 
 <script setup lang="ts">
+import 'monaco-editor/esm/nls.messages.ja.js'
 import * as monaco from 'monaco-editor'
 import { initMonacoWorkers } from '~/utils/monaco-setup'
 
@@ -13,11 +14,13 @@ const props = withDefaults(
     language?: string
     readOnly?: boolean
     theme?: string
+    lang?: string
   }>(),
   {
     language: 'plaintext',
     readOnly: false,
     theme: 'vs-dark',
+    lang: 'ja',
   }
 )
 

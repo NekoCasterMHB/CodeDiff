@@ -5,14 +5,19 @@
       v-model:open="open"
       collapsible="icon"
       :transition="false"
+      :style="{ '--sidebar-width-icon': '2.5rem' }"
       :ui="{
         gap: 'h-[calc(100%-var(--ui-header-height))]',
         container: 'absolute top-(--ui-header-height) bottom-0 h-[calc(100%-var(--ui-header-height))]',
       }"
     >
       <template #header>
-        <div class="flex items-center gap-2 w-full min-w-0">
-          <UIcon name="i-lucide-folder-tree" class="w-4 h-4 text-(--ui-text-muted) shrink-0" />
+        <div class="flex items-center gap-2 w-full min-w-0" :class="open ? '' : 'justify-center'">
+          <UIcon
+            :name="open ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'"
+            class="w-4 h-4 text-(--ui-text-muted) shrink-0 cursor-pointer hover:text-(--ui-text) transition-colors"
+            @click="open = !open"
+          />
           <span class="text-sm font-semibold text-(--ui-text-highlighted) truncate group-data-[state=collapsed]/sidebar:hidden">{{ $t('sidebar.title') }}</span>
           <div class="flex-1" />
           <UButton
@@ -46,9 +51,11 @@
         <div class="flex-1" />
         <UButton icon="i-lucide-file-plus" size="2xs" variant="ghost" color="neutral" @click="diff.addFile()" />
         <div class="w-px h-4 bg-(--ui-border)" />
-        <UButton icon="i-lucide-chevron-up" size="2xs" variant="ghost" color="neutral" @click="goPrevDiff" />
-        <span class="text-xs text-(--ui-text-muted) min-w-8 text-center">{{ diffNavText }}</span>
-        <UButton icon="i-lucide-chevron-down" size="2xs" variant="ghost" color="neutral" @click="goNextDiff" />
+        <div class="flex items-center bg-(--ui-primary)/10 border border-(--ui-primary)/20 rounded-md overflow-hidden">
+          <UButton icon="i-lucide-chevron-up" size="xs" variant="ghost" color="neutral" class="hover:bg-(--ui-primary)/30 rounded-none" @click="goPrevDiff" />
+          <span class="text-xs text-(--ui-text) min-w-7 text-center font-mono">{{ diffNavText }}</span>
+          <UButton icon="i-lucide-chevron-down" size="xs" variant="ghost" color="neutral" class="hover:bg-(--ui-primary)/30 rounded-none" @click="goNextDiff" />
+        </div>
       </div>
 
       <!-- Monaco Editor -->
@@ -69,11 +76,12 @@
           <MonacoDiffEditor
             v-if="diff.activeFile.value"
             ref="monacoRef"
-            :key="diff.activeFileId.value"
+            :key="editorKey"
             :left-content="diff.activeFile.value.leftContent"
             :right-content="diff.activeFile.value.rightContent"
             :language="diff.activeFile.value.language || 'plaintext'"
             :read-only="false"
+            :lang="locale"
             :theme="editorTheme"
             @update:left-content="v => updateFile('leftContent', v)"
             @update:right-content="v => updateFile('rightContent', v)"
@@ -97,11 +105,13 @@
 
 <script setup lang="ts">
 const diff = useDiff()
+const { locale } = useI18n()
 const colorMode = useColorMode()
 const open = useState('sidebar-open', () => true)
 const dragging = ref(false)
 const monacoRef = ref()
 const editorTheme = computed(() => colorMode.preference === 'dark' ? 'vs-dark' : 'vs')
+const editorKey = computed(() => `${diff.activeFileId.value}-${locale.value}`)
 
 const fileName = computed(() => {
   const f = diff.activeFile.value
@@ -122,9 +132,10 @@ function goNextDiff() { monacoRef.value?.getDiffEditor()?.goToDiff('next'); upda
 function goPrevDiff() { monacoRef.value?.getDiffEditor()?.goToDiff('previous'); updateNav() }
 function updateNav() {
   const de = monacoRef.value?.getDiffEditor()
-  if (!de) return
+  if (!de) { setTimeout(updateNav, 200); return }
   const changes = de.getLineChanges()
-  if (!changes?.length) { diffNavText.value = '0/0'; return }
+  if (!changes) { setTimeout(updateNav, 200); return }
+  if (!changes.length) { diffNavText.value = '0/0'; return }
   const pos = de.getModifiedEditor()?.getPosition()
   if (!pos) { diffNavText.value = `0/${changes.length}`; return }
   let idx = 0
@@ -135,7 +146,7 @@ function updateNav() {
   diffNavText.value = `${idx}/${changes.length}`
 }
 let navTimer: ReturnType<typeof setTimeout> | null = null
-watch(() => diff.activeFileId.value, () => {
+watch(() => [diff.activeFileId.value, diff.activeFile.value?.leftContent, diff.activeFile.value?.rightContent], () => {
   if (navTimer) clearTimeout(navTimer)
   navTimer = setTimeout(updateNav, 300)
 })
