@@ -1,6 +1,6 @@
 <template>
   <UApp>
-    <UHeader :ui="{ header: 'px-2!', container: 'w-full!' }">
+    <UHeader :ui="{ header: 'px-2!', container: 'w-full! max-w-full!' }">
       <template #left>
         <div class="flex items-center gap-2">
           <div class="w-7 h-7 rounded-lg bg-(--ui-primary) flex items-center justify-center">
