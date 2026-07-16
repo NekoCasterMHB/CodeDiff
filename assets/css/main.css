@@ -5,6 +5,13 @@ html, body, #__nuxt {
   height: 100%;
 }
 
+/* Dark mode: pure black background */
+html.dark {
+  --ui-bg: #000;
+  --ui-bg-elevated: #0a0a0a;
+  --ui-bg-muted: #141414;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
