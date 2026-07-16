@@ -3,9 +3,9 @@
 </template>
 
 <script setup lang="ts">
-import 'monaco-editor/esm/nls.messages.ja.js'
-import * as monaco from 'monaco-editor'
-import { initMonacoWorkers } from '~/utils/monaco-setup'
+import { initMonacoEnvironment } from '~/utils/monaco-setup'
+
+type MonacoType = typeof import('monaco-editor')
 
 const props = withDefaults(
   defineProps<{
@@ -30,11 +30,11 @@ const emit = defineEmits<{
 }>()
 
 const containerRef = ref<HTMLDivElement>()
-let diffEditor: monaco.editor.IStandaloneDiffEditor | null = null
-let originalModel: monaco.editor.ITextModel | null = null
-let modifiedModel: monaco.editor.ITextModel | null = null
-let resizeObserver: ResizeObserver | null = null
-const disposables: monaco.IDisposable[] = []
+let monaco: MonacoType | null = null
+let diffEditor: import('monaco-editor').editor.IStandaloneDiffEditor | null = null
+let originalModel: import('monaco-editor').editor.ITextModel | null = null
+let modifiedModel: import('monaco-editor').editor.ITextModel | null = null
+const disposables: (import('monaco-editor').IDisposable)[] = []
 
 function getLang(l: string): string {
   const m: Record<string, string> = {
@@ -51,21 +51,27 @@ function getLang(l: string): string {
 function cleanup() {
   for (const d of disposables) d.dispose()
   disposables.length = 0
-  resizeObserver?.disconnect()
-  resizeObserver = null
   diffEditor?.dispose()
   diffEditor = null
   originalModel?.dispose()
   originalModel = null
   modifiedModel?.dispose()
   modifiedModel = null
+  monaco = null
 }
 
-function create() {
+async function create() {
   if (!containerRef.value) return
-  initMonacoWorkers()
+
   cleanup()
 
+  // 1. Initialize VS Code API layer with locale (loads language pack + workers)
+  await initMonacoEnvironment(props.lang)
+
+  // 2. Dynamically import monaco-editor (aliased to @codingame/monaco-vscode-editor-api)
+  monaco = await import('monaco-editor')
+
+  // 3. Create editor
   const lang = getLang(props.language)
   originalModel = monaco.editor.createModel(props.leftContent, lang)
   modifiedModel = monaco.editor.createModel(props.rightContent, lang)
@@ -108,12 +114,12 @@ function sync() {
   const lang = getLang(props.language)
   if (originalModel.getValue() !== props.leftContent) originalModel.setValue(props.leftContent)
   if (modifiedModel.getValue() !== props.rightContent) modifiedModel.setValue(props.rightContent)
-  monaco.editor.setModelLanguage(originalModel, lang)
-  monaco.editor.setModelLanguage(modifiedModel, lang)
+  monaco!.editor.setModelLanguage(originalModel, lang)
+  monaco!.editor.setModelLanguage(modifiedModel, lang)
 }
 
 watch(() => [props.leftContent, props.rightContent, props.language], sync)
-watch(() => props.theme, () => monaco.editor.setTheme(props.theme))
+watch(() => props.theme, () => monaco?.editor.setTheme(props.theme))
 
 onMounted(() => nextTick(create))
 onUnmounted(cleanup)

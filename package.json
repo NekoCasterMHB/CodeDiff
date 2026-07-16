@@ -15,7 +15,6 @@
     "@nuxtjs/i18n": "^10.4.1",
     "diff": "^9.0.0",
     "idb-keyval": "^6.3.0",
-    "monaco-editor": "^0.55.1",
     "nanoid": "^6.0.0",
     "nuxt": "^4.4.8",
     "tailwindcss": "^4.3.2",
@@ -23,6 +22,13 @@
     "vue-router": "^5.1.0"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "^1.2.117"
+    "@codingame/esbuild-import-meta-url-plugin": "^1.0.3",
+    "@codingame/monaco-vscode-api": "^35.0.1",
+    "@codingame/monaco-vscode-language-pack-ja": "^35.0.1",
+    "@codingame/monaco-vscode-language-pack-zh-hans": "^35.0.1",
+    "@codingame/monaco-vscode-localization-service-override": "^35.0.1",
+    "@iconify-json/lucide": "^1.2.117",
+    "@types/vscode": "^1.125.0",
+    "monaco-editor": "npm:@codingame/monaco-vscode-editor-api@^35.0.1"
   }
 }

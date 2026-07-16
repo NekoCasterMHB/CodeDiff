@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import importMetaUrlPlugin from '@codingame/esbuild-import-meta-url-plugin'
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -45,14 +47,15 @@ export default defineNuxtConfig({
   vite: {
     optimizeDeps: {
       include: ['monaco-editor', 'diff', 'nanoid'],
-    },
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            monaco: ['monaco-editor'],
-          },
-        },
+      exclude: [
+        '@codingame/monaco-vscode-api',
+        '@codingame/monaco-vscode-localization-service-override',
+        '@codingame/monaco-vscode-language-pack-ja',
+        '@codingame/monaco-vscode-language-pack-zh-hans',
+        '@vscode/diff',
+      ],
+      esbuildOptions: {
+        plugins: [importMetaUrlPlugin],
       },
     },
   },
