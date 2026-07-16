@@ -1,61 +1,41 @@
 <template>
   <div class="flex flex-col h-full">
-    <!-- File List -->
-    <div class="flex-1 overflow-y-auto -mx-2 space-y-0.5">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-3 py-2.5 border-b border-border">
+      <span class="text-xs font-semibold text-muted uppercase tracking-wider">文件</span>
+      <UButton icon="i-lucide-plus" size="2xs" variant="ghost" color="neutral" @click="addAndEmit" />
+    </div>
+
+    <!-- List -->
+    <div class="flex-1 overflow-y-auto py-1">
       <div
-        v-for="(file, index) in diff.files.value"
+        v-for="(file, i) in diff.files.value"
         :key="file.id"
         :class="[
-          'group flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors text-sm mx-2',
+          'group flex items-center gap-2 mx-1.5 px-2.5 py-2 rounded-md cursor-pointer transition-colors text-sm',
           diff.activeFileId.value === file.id
-            ? 'bg-primary/15 text-primary font-medium'
+            ? 'bg-primary/12 text-primary font-medium'
             : 'hover:bg-muted text-default',
         ]"
-        @click="selectFile(file.id)"
+        @click="select(file.id)"
       >
-        <!-- File Icon -->
-        <UIcon :name="getIcon(file.language)" class="w-4 h-4 shrink-0 text-muted" />
-
-        <!-- File Name -->
-        <div class="flex-1 min-w-0">
-          <input
-            v-if="editingId === file.id"
-            ref="editInputRef"
-            v-model="editName"
-            class="w-full bg-transparent border-b border-primary outline-none text-sm"
-            @blur="doneEdit(file)"
-            @keydown.enter="doneEdit(file)"
-            @keydown.escape="editingId = null"
-          />
-          <span v-else class="block truncate" @dblclick="startEdit(file)">
-            {{ file.leftPath || file.rightPath || `文件 ${index + 1}` }}
-          </span>
-        </div>
-
-        <!-- Diff status dot -->
-        <span
-          v-if="file.leftContent && file.rightContent"
-          :class="[
-            'w-2 h-2 rounded-full shrink-0',
-            file.leftContent !== file.rightContent ? 'bg-warning' : 'bg-success',
-          ]"
-        />
-
-        <!-- Delete -->
+        <UIcon :name="icon(file.language)" class="w-4 h-4 shrink-0" :class="diff.activeFileId.value === file.id ? 'text-primary' : 'text-muted'" />
+        <span class="flex-1 truncate text-xs">{{ file.leftPath || file.rightPath || `文件 ${i + 1}` }}</span>
+        <span v-if="hasDiff(file)" class="w-1.5 h-1.5 rounded-full bg-warning shrink-0" />
         <UButton
-          icon="i-lucide-trash-2"
+          icon="i-lucide-x"
           size="2xs"
           variant="ghost"
           color="neutral"
-          class="opacity-0 group-hover:opacity-100 shrink-0 hover:text-error"
+          class="opacity-0 group-hover:opacity-100 shrink-0 -mr-1"
           @click.stop="diff.removeFile(file.id)"
         />
       </div>
     </div>
 
     <!-- Footer -->
-    <div class="pt-2 border-t border-border mt-2">
-      <UButton block variant="ghost" size="sm" icon="i-lucide-file-plus" @click="diff.addFile()">
+    <div class="px-2 py-2 border-t border-border">
+      <UButton block variant="ghost" size="xs" icon="i-lucide-file-plus" @click="addAndEmit">
         添加文件
       </UButton>
     </div>
@@ -64,33 +44,17 @@
 
 <script setup lang="ts">
 const diff = useDiff()
-const editingId = ref<string | null>(null)
-const editName = ref('')
-const editInputRef = ref()
+const emit = defineEmits<{ select: [] }>()
 
-function selectFile(id: string) {
-  diff.setActiveFile(id)
-}
-
-function getIcon(lang: string): string {
+function select(id: string) { diff.setActiveFile(id); emit('select') }
+function addAndEmit() { diff.addFile(); emit('select') }
+function hasDiff(f: { leftContent: string; rightContent: string }) { return f.leftContent && f.rightContent && f.leftContent !== f.rightContent }
+function icon(lang: string): string {
   const m: Record<string, string> = {
-    typescript: 'i-lucide-file-type2', javascript: 'i-lucide-file-type',
-    html: 'i-lucide-file-code', css: 'i-lucide-file-css', json: 'i-lucide-file-json',
-    python: 'i-lucide-file-code-2', markdown: 'i-lucide-file-text', plaintext: 'i-lucide-file',
+    typescript: 'i-lucide-file-type2', javascript: 'i-lucide-file-type', html: 'i-lucide-file-code',
+    css: 'i-lucide-file-css', json: 'i-lucide-file-json', python: 'i-lucide-file-code-2',
+    markdown: 'i-lucide-file-text', plaintext: 'i-lucide-file',
   }
   return m[lang] || 'i-lucide-file'
-}
-
-function startEdit(file: { id: string; leftPath: string; rightPath: string }) {
-  editingId.value = file.id
-  editName.value = file.leftPath || file.rightPath
-  nextTick(() => editInputRef.value?.focus())
-}
-
-function doneEdit(file: { id: string }) {
-  if (editingId.value) {
-    diff.updateFile(file.id, { leftPath: editName.value, rightPath: editName.value })
-  }
-  editingId.value = null
 }
 </script>
