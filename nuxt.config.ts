@@ -9,13 +9,28 @@ export default defineNuxtConfig({
     port: 4040,
   },
 
-  modules: ['@nuxt/ui', '@nuxthub/core'],
+  modules: ['@nuxt/ui', '@nuxthub/core', '@nuxtjs/i18n'],
+
+  i18n: {
+    lazy: true,
+    langDir: 'locales',
+    defaultLocale: 'zh',
+    strategy: 'no_prefix',
+    locales: [
+      { code: 'zh', iso: 'zh-CN', file: 'zh.json', name: '中文', flag: '🇨🇳' },
+      { code: 'ja', iso: 'ja-JP', file: 'ja.json', name: '日本語', flag: '🇯🇵' },
+    ],
+    detectBrowserLanguage: false,
+  },
+
+  css: ['~/assets/css/main.css'],
 
   hub: {
     database: true,
   },
 
   nitro: {
+    preset: 'cloudflare-pages',
     experimental: {
       openAPI: true,
     },

@@ -72,20 +72,22 @@ function create() {
     readOnly: props.readOnly,
     originalEditable: !props.readOnly,
     renderSideBySide: true,
+    useInlineViewWhenSpaceIsLimited: false,
     enableSplitViewResizing: true,
     renderOverviewRuler: true,
     minimap: { enabled: false },
     scrollBeyondLastLine: false,
     lineNumbers: 'on',
+    lineNumbersMinChars: 4,
     automaticLayout: true,
     fontSize: 14,
     fontFamily: "'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace",
     padding: { top: 12, bottom: 12 },
     wordWrap: 'off',
-    glyphMargin: true,
-    folding: true,
-    lineDecorationsWidth: 10,
-    renderIndicators: true,
+    glyphMargin: false,
+    folding: false,
+    lineDecorationsWidth: 0,
+    renderIndicators: false,
   })
 
   diffEditor.setModel({ original: originalModel, modified: modifiedModel })
@@ -116,12 +118,26 @@ onUnmounted(cleanup)
 defineExpose({ getDiffEditor: () => diffEditor })
 </script>
 
-<style scoped>
+<style>
+/* Monaco Editor overrides — must be unscoped to penetrate Shadow DOM */
 .monaco-diff-editor {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+}
+
+/* Line numbers: muted green */
+.monaco-diff-editor .line-numbers {
+  color: #009688 !important;
+}
+.vs-dark .monaco-diff-editor .line-numbers {
+  color: #009688 !important;
+}
+
+/* Gutter: add right padding for gap between line number and code */
+.monaco-diff-editor .margin-view-overlays .line-numbers {
+  padding-right: 12px !important;
 }
 </style>

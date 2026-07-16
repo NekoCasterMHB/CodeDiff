@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid'
 import { getDB, initDB } from '../../utils/db'
 
 export default defineEventHandler(async (event) => {
-  await initDB()
+  await initDB(event)
 
   const body = await readBody(event)
 
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const id = nanoid(12)
-  const db = getDB()
+  const db = getDB(event)
 
   await db
     .prepare(

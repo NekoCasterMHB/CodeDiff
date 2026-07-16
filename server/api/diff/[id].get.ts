@@ -1,7 +1,7 @@
 import { getDB, initDB } from '../../utils/db'
 
 export default defineEventHandler(async (event) => {
-  await initDB()
+  await initDB(event)
 
   const id = getRouterParam(event, 'id')
 
@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const db = getDB()
+  const db = getDB(event)
   const result = await db
     .prepare(`SELECT * FROM diffs WHERE id = ?1`)
     .bind(id)

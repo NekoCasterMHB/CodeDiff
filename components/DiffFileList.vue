@@ -1,11 +1,5 @@
 <template>
-  <div class="flex flex-col h-full">
-    <!-- Header -->
-    <div class="flex items-center justify-between px-3 py-2.5 border-b border-border">
-      <span class="text-xs font-semibold text-muted uppercase tracking-wider">文件</span>
-      <UButton icon="i-lucide-plus" size="2xs" variant="ghost" color="neutral" @click="addAndEmit" />
-    </div>
-
+  <div class="flex flex-col h-full group-data-[state=collapsed]/sidebar:hidden">
     <!-- List -->
     <div class="flex-1 overflow-y-auto py-1">
       <div
@@ -20,7 +14,7 @@
         @click="select(file.id)"
       >
         <UIcon :name="icon(file.language)" class="w-4 h-4 shrink-0" :class="diff.activeFileId.value === file.id ? 'text-primary' : 'text-muted'" />
-        <span class="flex-1 truncate text-xs">{{ file.leftPath || file.rightPath || `文件 ${i + 1}` }}</span>
+        <span class="flex-1 truncate text-xs">{{ file.leftPath || file.rightPath || $t('diffFile.fallbackName', { index: i + 1 }) }}</span>
         <span v-if="hasDiff(file)" class="w-1.5 h-1.5 rounded-full bg-warning shrink-0" />
         <UButton
           icon="i-lucide-x"
@@ -33,12 +27,6 @@
       </div>
     </div>
 
-    <!-- Footer -->
-    <div class="px-2 py-2 border-t border-border">
-      <UButton block variant="ghost" size="xs" icon="i-lucide-file-plus" @click="addAndEmit">
-        添加文件
-      </UButton>
-    </div>
   </div>
 </template>
 

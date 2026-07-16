@@ -1,14 +1,8 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-/* ── CodeDiff Global Styles ── */
-
-/* Make sure html/body/#__nuxt fill viewport */
 html, body, #__nuxt {
   height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
 }
 
 /* Custom scrollbar */
@@ -20,19 +14,9 @@ html, body, #__nuxt {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
+  background: hsl(var(--ui-border));
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
-}
-
-/* Monaco editor overrides */
-.monaco-diff-editor {
-  border-radius: 0 !important;
-}
-
-/* Smooth transitions */
-* {
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  background: hsl(var(--ui-muted));
 }

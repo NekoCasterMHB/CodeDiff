@@ -4,4 +4,4 @@ compatibility_date = "2025-07-15"
 [[d1_databases]]
 binding = "DB"
 database_name = "codediff-db"
-database_id = "codediff-local"
+database_id = "630b1244-6062-4e06-866c-bff0478fee65"

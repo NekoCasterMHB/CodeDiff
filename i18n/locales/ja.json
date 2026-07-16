@@ -1,0 +1,37 @@
+{
+  "app": { "title": "CodeDiff - オンラインコード差分ツール" },
+  "header": { "share": "共有", "new": "新規" },
+  "sidebar": { "title": "ファイル一覧" },
+  "toolbar": { "fileName": "ファイル名（例: app.ts）", "addFile": "ファイル追加", "prevDiff": "前の差分", "nextDiff": "次の差分" },
+  "editor": { "empty": "ファイルを追加するかドラッグ＆ドロップ", "dropHint": "ファイルをドロップ" },
+  "share": {
+    "title": "差分を共有",
+    "encrypted": "AES-256-GCMで暗号化され、パスワードはURLに含まれています",
+    "urlLabel": "共有リンク",
+    "urlHint": "このリンクを受け取った人は自動的に復号して表示できます。",
+    "encrypting": "暗号化して保存中...",
+    "cancel": "キャンセル",
+    "generate": "共有リンクを生成",
+    "close": "閉じる",
+    "copy": "コピー",
+    "copied": "コピー済み",
+    "selectFiles": "共有するファイルを選択",
+    "noFiles": "共有可能なファイルがありません",
+    "selectAll": "すべて選択",
+    "deselectAll": "選択解除",
+    "selected": "選択中"
+  },
+  "diffFile": { "fallbackName": "ファイル {index}" },
+  "view": {
+    "files": "ファイル",
+    "back": "トップに戻る",
+    "empty": "コンテンツなし",
+    "loading": "共有内容を読み込み中...",
+    "noCrypto": "お使いのブラウザはWeb Crypto APIに対応していません。",
+    "invalidLink": "無効な共有リンクです。",
+    "noPassword": "リンクに復号パスワードが含まれていません（#pwd=...）。",
+    "decryptFailed": "復号に失敗しました。パスワードが正しくない可能性があります。",
+    "loadFailed": "読み込み失敗"
+  },
+  "language": { "zh": "中文", "ja": "日本語" }
+}
