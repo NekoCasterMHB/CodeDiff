@@ -81,7 +81,6 @@
             :right-content="diff.activeFile.value.rightContent"
             :language="diff.activeFile.value.language || 'plaintext'"
             :read-only="false"
-            :lang="locale"
             :theme="editorTheme"
             @update:left-content="v => updateFile('leftContent', v)"
             @update:right-content="v => updateFile('rightContent', v)"
@@ -105,13 +104,12 @@
 
 <script setup lang="ts">
 const diff = useDiff()
-const { locale } = useI18n()
 const colorMode = useColorMode()
 const open = useState('sidebar-open', () => true)
 const dragging = ref(false)
 const monacoRef = ref()
 const editorTheme = computed(() => colorMode.preference === 'dark' ? 'vs-dark' : 'vs')
-const editorKey = computed(() => `${diff.activeFileId.value}-${locale.value}`)
+const editorKey = computed(() => String(diff.activeFileId.value))
 
 const fileName = computed(() => {
   const f = diff.activeFile.value

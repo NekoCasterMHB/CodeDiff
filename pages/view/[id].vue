@@ -60,7 +60,6 @@
               :right-content="activeFile.rightContent"
               :language="activeFile.language"
               :read-only="true"
-              :lang="locale"
               :theme="editorTheme"
             />
             <template #fallback>
@@ -83,7 +82,6 @@ definePageMeta({ layout: 'view' })
 import type { DiffFile } from '~/types/diff'
 
 const route = useRoute()
-const { locale } = useI18n()
 const { decrypt, getPasswordFromHash, isCryptoAvailable } = useCrypto()
 
 const loading = ref(true)
@@ -93,7 +91,7 @@ const activeFileId = ref('')
 const activeFile = computed(() => files.value.find(f => f.id === activeFileId.value))
 const colorMode = useColorMode()
 const editorTheme = computed(() => colorMode.preference === 'dark' ? 'vs-dark' : 'vs')
-const editorKey = computed(() => `${activeFile.value?.id || 'x'}-${locale.value}`)
+const editorKey = computed(() => activeFile.value?.id || 'x')
 const monacoRef = ref()
 const diffNavText = ref('')
 

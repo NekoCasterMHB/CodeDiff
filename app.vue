@@ -58,7 +58,6 @@ if (import.meta.server) {
 }
 
 const { locale, locales, setLocale } = useI18n()
-const localeCookie = useCookie('codediff-locale', { maxAge: 60 * 60 * 24 * 365 })
 
 // Dynamic page title
 const titles: Record<string, string> = {
@@ -84,14 +83,7 @@ const langItems = computed<DropdownMenuItem[][]>(() => [
   locales.value.map(loc => ({
     label: `${loc.flag} ${loc.name}`,
     active: locale.value === loc.code,
-    onSelect: () => {
-      if (locale.value !== loc.code) {
-        // Set cookie synchronously before reload (so new locale is available on next load)
-        localeCookie.value = loc.code
-        setLocale(loc.code)
-        window.location.reload()
-      }
-    },
+    onSelect: () => { setLocale(loc.code) },
   })),
 ])
 </script>
