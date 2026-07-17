@@ -2,7 +2,7 @@
   "app": { "title": "CodeDiff - オンラインコード差分ツール" },
   "header": { "share": "共有", "new": "新規" },
   "sidebar": { "title": "ファイル一覧" },
-  "toolbar": { "fileName": "ファイル名（例: app.ts）", "addFile": "ファイル追加", "diffNav": "差分箇所", "prevDiff": "前の差分", "nextDiff": "次の差分" },
+  "toolbar": { "fileName": "ファイル名（例: app.ts）", "addFile": "ファイル追加", "diffNav": "差分箇所:", "prevDiff": "前の差分", "nextDiff": "次の差分" },
   "editor": { "empty": "ファイルを追加するかドラッグ＆ドロップ", "dropHint": "ファイルをドロップ" },
   "share": {
     "title": "差分を共有",

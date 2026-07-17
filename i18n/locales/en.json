@@ -2,7 +2,7 @@
   "app": { "title": "CodeDiff - Online Code Diff Tool" },
   "header": { "share": "Share", "new": "New" },
   "sidebar": { "title": "Files" },
-  "toolbar": { "fileName": "File name (e.g. app.ts)", "addFile": "Add File", "diffNav": "Diff", "prevDiff": "Previous", "nextDiff": "Next" },
+  "toolbar": { "fileName": "File name (e.g. app.ts)", "addFile": "Add File", "diffNav": "Diff:", "prevDiff": "Previous", "nextDiff": "Next" },
   "editor": { "empty": "Add a file or drag & drop here", "dropHint": "Drop files to upload" },
   "share": {
     "title": "Share Diff",

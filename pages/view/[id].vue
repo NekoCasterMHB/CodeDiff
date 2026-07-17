@@ -46,7 +46,6 @@
           <span class="text-xs text-(--ui-text) truncate flex-1">{{ activeFile.leftPath || activeFile.rightPath || 'untitled' }}</span>
           <div class="w-px h-4 bg-(--ui-border)" />
           <span class="text-xs text-(--ui-text-muted) shrink-0">{{ $t('toolbar.diffNav') }}</span>
-          <span class="text-xs text-(--ui-text-muted) shrink-0">{{ $t('toolbar.diffNav') }}</span>
           <div class="flex items-center bg-(--ui-primary)/10 border border-(--ui-primary)/20 rounded-md overflow-hidden">
           <UButton icon="i-lucide-chevron-up" size="xs" variant="ghost" color="neutral" class="hover:bg-(--ui-primary)/30 rounded-none" @click="goPrevDiff" />
             <span class="text-xs text-(--ui-text) min-w-7 text-center font-mono">{{ diffNavText }}</span>
