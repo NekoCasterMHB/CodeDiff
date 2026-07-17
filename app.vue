@@ -31,6 +31,15 @@
         >
           {{ $t('header.share') }}
         </UButton>
+        <UButton
+          icon="i-simple-icons-github"
+          size="md"
+          variant="ghost"
+          color="neutral"
+          to="https://github.com/NekoCasterMHB/CodeDiff"
+          target="_blank"
+          aria-label="GitHub"
+        />
       </template>
 
       <template #body>
