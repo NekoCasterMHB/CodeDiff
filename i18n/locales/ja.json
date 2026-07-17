@@ -16,10 +16,14 @@
     "copy": "コピー",
     "copied": "コピー済み",
     "selectFiles": "共有するファイルを選択",
+    "selectedFiles": "共有中のファイル",
     "noFiles": "共有可能なファイルがありません",
     "selectAll": "すべて選択",
     "deselectAll": "選択解除",
-    "selected": "選択中"
+    "selected": "選択中",
+    "expiresIn": "有効期限（時間）",
+    "hours": "時間",
+    "expiresAt": "期限切れ"
   },
   "diffFile": { "fallbackName": "ファイル {index}" },
   "view": {

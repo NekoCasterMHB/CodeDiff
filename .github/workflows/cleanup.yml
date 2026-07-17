@@ -1,0 +1,21 @@
+name: Daily Cleanup
+
+on:
+  schedule:
+    # 每天 JST 00:00 (UTC 15:00)
+    - cron: '0 15 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call cleanup API
+        run: |
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' "${{ secrets.APP_URL }}/api/cleanup?secret=${{ secrets.CRON_SECRET }}")
+          echo "HTTP Status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "Cleanup failed with status $STATUS"
+            exit 1
+          fi
+          echo "Cleanup completed successfully"

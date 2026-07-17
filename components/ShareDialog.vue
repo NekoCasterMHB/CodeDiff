@@ -4,26 +4,51 @@
       <div class="space-y-4">
         <!-- File Selection -->
         <div class="space-y-1.5">
-          <label class="text-xs font-medium text-default">{{ $t('share.selectFiles') }}</label>
+          <label class="text-xs font-medium text-default">{{ generated ? $t('share.selectedFiles') : $t('share.selectFiles') }}</label>
           <div class="border border-default rounded-lg divide-y divide-default max-h-48 overflow-y-auto">
             <label
-              v-for="f in filesWithContent"
+              v-for="f in displayedFiles"
               :key="f.id"
-              class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-elevated transition-colors"
+              class="flex items-center gap-2 px-3 py-2 transition-colors"
+              :class="generated ? '' : 'cursor-pointer hover:bg-elevated'"
             >
-              <UCheckbox :model-value="selectedIds.has(f.id)" @update:model-value="toggle(f.id)" />
+              <UCheckbox v-if="!generated" :model-value="selectedIds.has(f.id)" @update:model-value="toggle(f.id)" />
               <UIcon :name="fileIcon(f.language)" class="w-3.5 h-3.5 text-muted shrink-0" />
               <span class="text-xs truncate">{{ f.leftPath || f.rightPath || $t('diffFile.fallbackName', { index: 1 }) }}</span>
               <span v-if="f.leftContent !== f.rightContent" class="w-1.5 h-1.5 rounded-full bg-warning shrink-0 ml-auto" />
             </label>
-            <div v-if="!filesWithContent.length" class="px-3 py-4 text-center text-xs text-muted">
+            <div v-if="!displayedFiles.length" class="px-3 py-4 text-center text-xs text-muted">
               {{ $t('share.noFiles') }}
             </div>
           </div>
-          <div class="flex items-center gap-2">
+          <div v-if="!generated" class="flex items-center gap-2">
             <UButton size="xs" variant="ghost" class="text-[0.65rem]!" @click="selectAll">{{ $t('share.selectAll') }}</UButton>
             <UButton size="xs" variant="ghost" class="text-[0.65rem]!" @click="deselectAll">{{ $t('share.deselectAll') }}</UButton>
           </div>
+        </div>
+
+        <!-- Expiration -->
+        <div v-if="!generated" class="space-y-1.5">
+          <label class="text-xs font-medium text-default">{{ $t('share.expiresIn') }}</label>
+          <div class="flex items-center gap-2">
+            <UInput
+              :model-value="String(expiresInHours)"
+              type="number"
+              min="1"
+              max="999"
+              size="sm"
+              class="w-20"
+              @update:model-value="onExpiresInput"
+            />
+            <span class="text-xs text-muted">{{ $t('share.hours') }}</span>
+            <span class="text-xs text-muted ml-auto">{{ $t('share.expiresAt') }}: {{ expiresAtText }}</span>
+          </div>
+        </div>
+
+        <!-- Expiration (read-only after generation) -->
+        <div v-if="generated" class="flex items-center gap-2 text-xs text-muted">
+          <UIcon name="i-lucide-clock" class="w-3.5 h-3.5 shrink-0" />
+          <span>{{ $t('share.expiresAt') }}: {{ lockedExpiresAt }}</span>
         </div>
 
         <!-- Encryption info -->
@@ -86,11 +111,33 @@ const shareUrl = ref('')
 const loading = ref(false)
 const copied = ref(false)
 const error = ref('')
+const generated = ref(false)
 const selectedIds = ref(new Set<string>())
+const expiresInHours = ref(48)
+const lockedExpiresAt = ref('')
+
+const expiresAtText = computed(() => {
+  const d = new Date(Date.now() + expiresInHours.value * 3600_000)
+  return d.toLocaleString()
+})
+
+function onExpiresInput(v: string) {
+  const n = parseInt(v, 10)
+  if (isNaN(n) || n < 1) expiresInHours.value = 1
+  else if (n > 999) expiresInHours.value = 999
+  else expiresInHours.value = n
+}
 
 // Files that have at least some content
 const filesWithContent = computed(() =>
   diff.files.value.filter(f => f.leftContent || f.rightContent)
+)
+
+// After generation: only show selected files; before: show all
+const displayedFiles = computed(() =>
+  generated.value
+    ? filesWithContent.value.filter(f => selectedIds.value.has(f.id))
+    : filesWithContent.value
 )
 
 // Reset selection when dialog opens
@@ -98,6 +145,9 @@ watch(open, (v) => {
   if (v) {
     shareUrl.value = ''
     error.value = ''
+    generated.value = false
+    lockedExpiresAt.value = ''
+    expiresInHours.value = 48
     selectedIds.value = new Set(filesWithContent.value.filter(f => f.leftContent !== f.rightContent).map(f => f.id))
   }
 })
@@ -131,10 +181,15 @@ async function generateShare() {
 
     const response = await $fetch<{ id: string; url: string }>('/api/diff/create', {
       method: 'POST',
-      body: { encryptedData, iv, salt, fileCount: selectedFiles.length },
+      body: { encryptedData, iv, salt, fileCount: selectedFiles.length, expiresInHours: expiresInHours.value },
     })
 
     shareUrl.value = buildShareUrl(response.id, password)
+
+    // Lock expiration display and disable file selection
+    const d = new Date(Date.now() + expiresInHours.value * 3600_000)
+    lockedExpiresAt.value = d.toLocaleString()
+    generated.value = true
   } catch (err: any) {
     error.value = err.data?.statusMessage || err.message || '生成分享链接失败。'
   } finally {

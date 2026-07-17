@@ -16,10 +16,14 @@
     "copy": "Copy",
     "copied": "Copied",
     "selectFiles": "Select files to share",
+    "selectedFiles": "Shared files",
     "noFiles": "No files to share",
     "selectAll": "Select All",
     "deselectAll": "Deselect All",
-    "selected": "selected"
+    "selected": "selected",
+    "expiresIn": "Expires in (hours)",
+    "hours": "hours",
+    "expiresAt": "Expires at"
   },
   "diffFile": { "fallbackName": "File {index}" },
   "view": {

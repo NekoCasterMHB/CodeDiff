@@ -19,8 +19,11 @@ export function getDB(event: any) {
 export async function initDB(event: any) {
   const db = getDB(event)
   if (db._local) return // Local store doesn't need init
-  await db.exec(`CREATE TABLE IF NOT EXISTS diffs (id TEXT PRIMARY KEY, encrypted_data TEXT NOT NULL, iv TEXT NOT NULL, salt TEXT NOT NULL, file_count INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime('now')))`)
+  await db.exec(`CREATE TABLE IF NOT EXISTS diffs (id TEXT PRIMARY KEY, encrypted_data TEXT NOT NULL, iv TEXT NOT NULL, salt TEXT NOT NULL, file_count INTEGER NOT NULL DEFAULT 0, expires_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')))`)
+  // Migration: add expires_at column for existing tables (safe to retry)
+  await db.exec(`ALTER TABLE diffs ADD COLUMN expires_at TEXT`).catch(() => {})
   await db.exec(`CREATE INDEX IF NOT EXISTS idx_diffs_created_at ON diffs(created_at)`)
+  await db.exec(`CREATE INDEX IF NOT EXISTS idx_diffs_expires_at ON diffs(expires_at)`)
 }
 
 function createLocalDB() {
@@ -44,6 +47,7 @@ function createLocalDB() {
                   iv: args[2],
                   salt: args[3],
                   file_count: args[4] || 1,
+                  expires_at: args[5] || null,
                   created_at: new Date().toISOString(),
                 })
               }
