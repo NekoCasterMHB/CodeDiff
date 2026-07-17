@@ -32,5 +32,6 @@ export default defineEventHandler(async (event) => {
     salt: result.salt as string,
     fileCount: result.file_count as number,
     createdAt: result.created_at as string,
+    expiresAt: result.expires_at as string,
   }
 })

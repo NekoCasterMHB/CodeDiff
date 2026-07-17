@@ -3,10 +3,10 @@
     <UHeader :ui="{ header: 'px-2!', container: 'w-full! max-w-full!' }">
       <template #left>
         <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-lg bg-(--ui-primary) flex items-center justify-center">
+          <div class="w-7 h-7 rounded-lg bg-(--ui-primary) flex items-center justify-center cursor-pointer" @click="navigateTo('/')">
             <UIcon name="i-lucide-git-compare-arrows" class="w-4 h-4 text-(--ui-bg)" />
           </div>
-          <span class="font-bold text-lg">CodeDiff</span>
+          <span class="font-bold text-lg cursor-pointer" @click="navigateTo('/')">CodeDiff</span>
         </div>
       </template>
 

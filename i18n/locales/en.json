@@ -2,7 +2,7 @@
   "app": { "title": "CodeDiff - Online Code Diff Tool" },
   "header": { "share": "Share", "new": "New" },
   "sidebar": { "title": "Files" },
-  "toolbar": { "fileName": "File name (e.g. app.ts)", "addFile": "Add File", "prevDiff": "Previous", "nextDiff": "Next" },
+  "toolbar": { "fileName": "File name (e.g. app.ts)", "addFile": "Add File", "diffNav": "Diff:", "prevDiff": "Previous", "nextDiff": "Next" },
   "editor": { "empty": "Add a file or drag & drop here", "dropHint": "Drop files to upload" },
   "share": {
     "title": "Share Diff",
@@ -35,7 +35,10 @@
     "invalidLink": "Invalid share link.",
     "noPassword": "Missing decryption password in link (#pwd=...).",
     "decryptFailed": "Decryption failed. Password may be incorrect.",
-    "loadFailed": "Load failed"
+    "loadFailed": "Load failed",
+    "remainingDays": "{days}d {hours}h remaining",
+    "remainingHours": "{hours}h {minutes}m remaining",
+    "remainingMinutes": "{minutes}m remaining"
   },
   "language": { "zh": "中文", "ja": "日本語", "en": "English" }
 }

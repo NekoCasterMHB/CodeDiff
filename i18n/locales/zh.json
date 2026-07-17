@@ -2,7 +2,7 @@
   "app": { "title": "CodeDiff - 在线代码差分高亮工具" },
   "header": { "share": "分享", "new": "新建" },
   "sidebar": { "title": "文件列表" },
-  "toolbar": { "fileName": "文件名（如 app.ts）", "addFile": "添加文件", "prevDiff": "上一处", "nextDiff": "下一处" },
+  "toolbar": { "fileName": "文件名（如 app.ts）", "addFile": "添加文件", "diffNav": "差分位置:", "prevDiff": "上一处", "nextDiff": "下一处" },
   "editor": { "empty": "点击添加文件或拖拽文件到此处", "dropHint": "释放文件以上传" },
   "share": {
     "title": "分享差分",
@@ -35,7 +35,10 @@
     "invalidLink": "无效的分享链接。",
     "noPassword": "链接中缺少解密密码（#pwd=...）。",
     "decryptFailed": "解密失败，密码可能不正确。",
-    "loadFailed": "加载失败"
+    "loadFailed": "加载失败",
+    "remainingDays": "剩余 {days} 天 {hours} 小时",
+    "remainingHours": "剩余 {hours} 小时 {minutes} 分",
+    "remainingMinutes": "剩余 {minutes} 分"
   },
   "language": { "zh": "中文", "ja": "日本語" }
 }

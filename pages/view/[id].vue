@@ -45,10 +45,16 @@
           <UIcon name="i-lucide-file-text" class="w-3.5 h-3.5 text-(--ui-text-muted) shrink-0" />
           <span class="text-xs text-(--ui-text) truncate flex-1">{{ activeFile.leftPath || activeFile.rightPath || 'untitled' }}</span>
           <div class="w-px h-4 bg-(--ui-border)" />
-        <div class="flex items-center bg-(--ui-primary)/10 border border-(--ui-primary)/20 rounded-md overflow-hidden">
+          <span class="text-xs text-(--ui-text-muted) shrink-0">{{ $t('toolbar.diffNav') }}</span>
+          <span class="text-xs text-(--ui-text-muted) shrink-0">{{ $t('toolbar.diffNav') }}</span>
+          <div class="flex items-center bg-(--ui-primary)/10 border border-(--ui-primary)/20 rounded-md overflow-hidden">
           <UButton icon="i-lucide-chevron-up" size="xs" variant="ghost" color="neutral" class="hover:bg-(--ui-primary)/30 rounded-none" @click="goPrevDiff" />
             <span class="text-xs text-(--ui-text) min-w-7 text-center font-mono">{{ diffNavText }}</span>
           <UButton icon="i-lucide-chevron-down" size="xs" variant="ghost" color="neutral" class="hover:bg-(--ui-primary)/30 rounded-none" @click="goNextDiff" />
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-(--ui-text-muted) ml-auto" v-if="expiresRemaining">
+            <UIcon name="i-lucide-clock" class="w-3 h-3 shrink-0" />
+            <span>{{ expiresRemaining }}</span>
           </div>
         </div>
         <div class="flex-1 relative overflow-hidden">
@@ -83,11 +89,31 @@ import type { DiffFile } from '~/types/diff'
 
 const route = useRoute()
 const { decrypt, getPasswordFromHash, isCryptoAvailable } = useCrypto()
+const { t } = useI18n()
 
 const loading = ref(true)
 const error = ref('')
 const files = ref<DiffFile[]>([])
 const activeFileId = ref('')
+const expiresAt = ref('')
+const expiresRemaining = ref('')
+let expireTimer: ReturnType<typeof setInterval> | null = null
+
+function updateExpiresRemaining() {
+  if (!expiresAt.value) { expiresRemaining.value = ''; return }
+  const now = Date.now()
+  const target = new Date(expiresAt.value).getTime()
+  const diff = target - now
+  if (diff <= 0) { expiresRemaining.value = ''; return }
+  const days = Math.floor(diff / 86400_000)
+  const hours = Math.floor((diff % 86400_000) / 3600_000)
+  const minutes = Math.floor((diff % 3600_000) / 60_000)
+  if (days > 0) expiresRemaining.value = t('view.remainingDays', { days, hours })
+  else if (hours > 0) expiresRemaining.value = t('view.remainingHours', { hours, minutes })
+  else expiresRemaining.value = t('view.remainingMinutes', { minutes })
+}
+
+onUnmounted(() => { if (expireTimer) clearInterval(expireTimer) })
 const activeFile = computed(() => files.value.find(f => f.id === activeFileId.value))
 const colorMode = useColorMode()
 const editorTheme = computed(() => colorMode.preference === 'dark' ? 'vs-dark' : 'vs')
@@ -135,7 +161,10 @@ async function loadDiff() {
     if (!isCryptoAvailable()) throw new Error('当前浏览器不支持 Web Crypto API。')
     const id = route.params.id as string
     if (!id) throw new Error('无效的分享链接。')
-    const record = await $fetch<{ id: string; encryptedData: string; iv: string; salt: string; fileCount: number; createdAt: string }>(`/api/diff/${id}`)
+    const record = await $fetch<{ id: string; encryptedData: string; iv: string; salt: string; fileCount: number; createdAt: string; expiresAt: string }>(`/api/diff/${id}`)
+    expiresAt.value = record.expiresAt
+    updateExpiresRemaining()
+    expireTimer = setInterval(updateExpiresRemaining, 10_000)
     const password = getPasswordFromHash()
     if (!password) throw new Error('链接中缺少解密密码（#pwd=...）。')
     let decrypted: { files: DiffFile[] }
