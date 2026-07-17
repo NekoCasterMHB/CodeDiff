@@ -22,8 +22,8 @@
             </div>
           </div>
           <div v-if="!generated" class="flex items-center gap-2">
-            <UButton size="xs" variant="ghost" class="text-[0.65rem]!" @click="selectAll">{{ $t('share.selectAll') }}</UButton>
-            <UButton size="xs" variant="ghost" class="text-[0.65rem]!" @click="deselectAll">{{ $t('share.deselectAll') }}</UButton>
+            <UButton size="sm" variant="soft" @click="selectAll">{{ $t('share.selectAll') }}</UButton>
+            <UButton size="sm" variant="soft" @click="deselectAll">{{ $t('share.deselectAll') }}</UButton>
           </div>
         </div>
 
