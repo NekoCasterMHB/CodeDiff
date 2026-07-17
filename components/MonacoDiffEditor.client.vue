@@ -90,6 +90,9 @@ function create() {
 
   diffEditor.setModel({ original: originalModel, modified: modifiedModel })
 
+  // Auto-reveal the first diff once rendered
+  setTimeout(() => diffEditor?.revealFirstDiff(), 100)
+
   if (!props.readOnly) {
     disposables.push(
       originalModel.onDidChangeContent(() => emit('update:leftContent', originalModel!.getValue())),
