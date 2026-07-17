@@ -31,16 +31,14 @@
         <div v-if="!generated" class="space-y-1.5">
           <label class="text-xs font-medium text-default">{{ $t('share.expiresIn') }}</label>
           <div class="flex items-center gap-2">
-            <UInput
-              :model-value="String(expiresInHours)"
-              type="number"
-              min="1"
-              max="999"
+            <UInputNumber
+              v-model="expiresInDays"
+              :min="1"
+              :max="30"
               size="sm"
               class="w-20"
-              @update:model-value="onExpiresInput"
             />
-            <span class="text-xs text-muted">{{ $t('share.hours') }}</span>
+            <span class="text-xs text-muted">{{ $t('share.days') }}</span>
             <span class="text-xs text-muted ml-auto">{{ $t('share.expiresAt') }}: {{ expiresAtText }}</span>
           </div>
         </div>
@@ -113,20 +111,22 @@ const copied = ref(false)
 const error = ref('')
 const generated = ref(false)
 const selectedIds = ref(new Set<string>())
-const expiresInHours = ref(48)
+const expiresInDays = ref(3)
 const lockedExpiresAt = ref('')
 
-const expiresAtText = computed(() => {
-  const d = new Date(Date.now() + expiresInHours.value * 3600_000)
-  return d.toLocaleString()
-})
-
-function onExpiresInput(v: string) {
-  const n = parseInt(v, 10)
-  if (isNaN(n) || n < 1) expiresInHours.value = 1
-  else if (n > 999) expiresInHours.value = 999
-  else expiresInHours.value = n
+function calcExpireDate(days: number): string {
+  // Use JST (UTC+9) to match cleanup cron timezone (GitHub Actions: JST 00:00 = UTC 15:00)
+  const now = new Date()
+  const jstNow = new Date(now.getTime() + 9 * 3600_000)
+  jstNow.setUTCDate(jstNow.getUTCDate() + days)
+  jstNow.setUTCHours(0, 0, 0, 0)
+  const y = jstNow.getUTCFullYear()
+  const m = jstNow.getUTCMonth() + 1
+  const day = jstNow.getUTCDate()
+  return `${y}/${m}/${day} 00:00`
 }
+
+const expiresAtText = computed(() => calcExpireDate(expiresInDays.value))
 
 // Files that have at least some content
 const filesWithContent = computed(() =>
@@ -147,7 +147,7 @@ watch(open, (v) => {
     error.value = ''
     generated.value = false
     lockedExpiresAt.value = ''
-    expiresInHours.value = 48
+    expiresInDays.value = 3
     selectedIds.value = new Set(filesWithContent.value.filter(f => f.leftContent !== f.rightContent).map(f => f.id))
   }
 })
@@ -181,14 +181,13 @@ async function generateShare() {
 
     const response = await $fetch<{ id: string; url: string }>('/api/diff/create', {
       method: 'POST',
-      body: { encryptedData, iv, salt, fileCount: selectedFiles.length, expiresInHours: expiresInHours.value },
+      body: { encryptedData, iv, salt, fileCount: selectedFiles.length, expiresInDays: expiresInDays.value },
     })
 
     shareUrl.value = buildShareUrl(response.id, password)
 
     // Lock expiration display and disable file selection
-    const d = new Date(Date.now() + expiresInHours.value * 3600_000)
-    lockedExpiresAt.value = d.toLocaleString()
+    lockedExpiresAt.value = calcExpireDate(expiresInDays.value)
     generated.value = true
   } catch (err: any) {
     error.value = err.data?.statusMessage || err.message || '生成分享链接失败。'

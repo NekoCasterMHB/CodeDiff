@@ -21,8 +21,8 @@
     "selectAll": "全选",
     "deselectAll": "取消全选",
     "selected": "已选",
-    "expiresIn": "有效期（小时）",
-    "hours": "小时",
+    "expiresIn": "有效期（最大30天）",
+    "days": "天",
     "expiresAt": "过期时间"
   },
   "diffFile": { "fallbackName": "文件 {index}" },

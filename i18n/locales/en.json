@@ -21,8 +21,8 @@
     "selectAll": "Select All",
     "deselectAll": "Deselect All",
     "selected": "selected",
-    "expiresIn": "Expires in (hours)",
-    "hours": "hours",
+    "expiresIn": "Expires in (max 30 days)",
+    "days": "days",
     "expiresAt": "Expires at"
   },
   "diffFile": { "fallbackName": "File {index}" },

@@ -21,8 +21,8 @@
     "selectAll": "すべて選択",
     "deselectAll": "選択解除",
     "selected": "選択中",
-    "expiresIn": "有効期限（時間）",
-    "hours": "時間",
+    "expiresIn": "有効期限（最大30日）",
+    "days": "日",
     "expiresAt": "期限切れ"
   },
   "diffFile": { "fallbackName": "ファイル {index}" },
