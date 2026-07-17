@@ -9,8 +9,13 @@
  *   Schedule: e.g., `0 * * * *` (every hour)
  */
 
+import { getDB, initDB } from '../utils/db'
+
 export default defineEventHandler(async (event) => {
-  // Auth: CRON_SECRET from Cloudflare env binding, fallback to process.env for local dev
+  // Init DB schema (idempotent — safe to call every time)
+  await initDB(event)
+
+  // Auth: Cloudflare env binding (production), fallback to process.env (local dev)
   const envSecret = event.context.cloudflare?.env?.CRON_SECRET || process.env.CRON_SECRET
   const querySecret = getQuery(event).secret
 
@@ -18,7 +23,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  // D1 binding: always available on Cloudflare, falls back to local mock in dev
   const db = event.context.cloudflare?.env?.DB
   if (!db) {
     return { result: 'skipped', reason: 'No D1 binding (local dev)' }
