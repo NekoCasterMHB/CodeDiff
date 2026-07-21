@@ -15,6 +15,7 @@
         <UDropdownMenu :items="langItems" :content="{ align: 'end' }">
           <UButton
             :label="currentLang"
+            :icon="flagIcons[currentLangCode]"
             trailing-icon="i-lucide-chevron-down"
             size="sm"
             variant="outline"
@@ -83,14 +84,24 @@ const shareOpen = ref(false)
 
 const isViewPage = computed(() => route.path.startsWith('/view'))
 
+const flagIcons: Record<string, string> = {
+  ja: 'i-openmoji-flag-japan',
+  zh: 'i-openmoji-flag-china',
+  en: 'i-openmoji-flag-united-states',
+}
+
+const currentLangCode = computed(() => locale.value)
+
 const currentLang = computed(() => {
   const loc = locales.value.find(l => l.code === locale.value)
-  return loc ? `${loc.flag} ${loc.name}` : '🌐'
+  if (!loc) return ''
+  return loc.name
 })
 
 const langItems = computed<DropdownMenuItem[][]>(() => [
   locales.value.map(loc => ({
-    label: `${loc.flag} ${loc.name}`,
+    label: loc.name,
+    icon: flagIcons[loc.code],
     active: locale.value === loc.code,
     onSelect: () => { setLocale(loc.code) },
   })),

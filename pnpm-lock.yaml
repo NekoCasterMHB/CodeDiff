@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@iconify-json/openmoji':
+        specifier: ^1.2.27
+        version: 1.2.27
       '@nuxt/ui':
         specifier: ^4.9.0
         version: 4.9.0(394cd2955627ee52eca16183a4864b37)
@@ -785,6 +788,9 @@ packages:
 
   '@iconify-json/lucide@1.2.117':
     resolution: {integrity: sha512-7isYKJKWRZ8NfLNSY8pIYmRWiMBkopL4/X22gZfFmePFhc7az0hQ5biqBLG6vdDEvMctFu2suZB3yQ29RL+8tA==}
+
+  '@iconify-json/openmoji@1.2.27':
+    resolution: {integrity: sha512-pIH1ofyNMYOD1vysHYtRzhAMMftcdmw+kCdzr/GDxIIa8jU4XrK3LzZcMs+kHXWzNaZL13VZkJ7H+a07BPWiiQ==}
 
   '@iconify-json/simple-icons@1.2.90':
     resolution: {integrity: sha512-zt2o2ZvQpHVvZJARIkZ51RnaHY2oqcPJMvHE+mVnxkSr+c33fnX4gciiXu+wyX5ei+s0qbVX1wD0DWBbaGBYMA==}
@@ -6075,6 +6081,10 @@ snapshots:
   '@humanwhocodes/retry@0.4.3': {}
 
   '@iconify-json/lucide@1.2.117':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/openmoji@1.2.27':
     dependencies:
       '@iconify/types': 2.0.0
 
