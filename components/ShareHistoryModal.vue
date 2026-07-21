@@ -21,7 +21,7 @@
             </div>
             <UButton
               icon="i-lucide-trash-2"
-              size="2xs"
+              size="xs"
               color="error"
               variant="ghost"
               :loading="deletingId === item.id"
@@ -78,7 +78,7 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-2 w-full">
-        <UButton variant="soft" color="neutral" size="sm" @click="confirmOpen = false">{{ $t('share.cancel') }}</UButton>
+        <UButton variant="soft" color="neutral" size="sm" @click="() => { confirmOpen = false }">{{ $t('share.cancel') }}</UButton>
         <UButton color="error" size="sm" :loading="deletingId === pendingDelete?.id" @click="doDelete">{{ $t('share.delete') }}</UButton>
       </div>
     </template>
@@ -119,14 +119,15 @@ function cancelShare(item: ShareHistoryItem) {
 async function doDelete() {
   const item = pendingDelete.value
   if (!item) return
-  deletingId.value = item.id
   confirmOpen.value = false
-  try {
-    const id = item.shareUrl.split('/view/')[1]?.split('#')[0]
-    if (id) await $fetch(`/api/diff/${id}?token=${encodeURIComponent(item.ownerToken)}`, { method: 'DELETE' })
-    await removeHistory(item.id)
-  } catch { /* ignore */ }
-  deletingId.value = ''
-  pendingDelete.value = null
+  // Best-effort API deletion
+  const id = item.shareUrl.split('/view/')[1]?.split('#')[0]
+  if (id) {
+    try {
+      await $fetch(`/api/diff/${id}?token=${encodeURIComponent(item.ownerToken)}`, { method: 'DELETE' })
+    } catch { /* API error — only local removal matters */ }
+  }
+  // Always remove from local history
+  await removeHistory(item.id)
 }
 </script>

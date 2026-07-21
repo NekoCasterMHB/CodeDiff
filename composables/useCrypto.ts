@@ -87,13 +87,12 @@ export async function encrypt(
   const key = await deriveKey(password, salt)
   const encoder = new TextEncoder()
   const encoded = encoder.encode(JSON.stringify(data))
-  // Compression temporarily disabled for testing
-  // const compressed = pakoDeflate(encoded)
+  const compressed = pakoDeflate(encoded)
 
   const ciphertext = await crypto.subtle.encrypt(
     { name: ALGORITHM, iv },
     key,
-    encoded // compressed
+    compressed
   )
 
   return {
@@ -121,9 +120,9 @@ export async function decrypt<T = unknown>(
     ciphertext
   )
 
-  // const decompressed = pakoInflate(new Uint8Array(plainBuffer))
+  const decompressed = pakoInflate(new Uint8Array(plainBuffer))
   const decoder = new TextDecoder()
-  return JSON.parse(decoder.decode(plainBuffer)) as T
+  return JSON.parse(decoder.decode(decompressed)) as T
 }
 
 /**

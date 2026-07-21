@@ -13,9 +13,14 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Size limit temporarily disabled for testing
-  // const dataSize = JSON.stringify(body).length
-  // if (dataSize > 1_000_000) { throw createError({ statusCode: 413, statusMessage: 'Content too large.' }) }
+  // Validate size limits (max ~1MB total, data is compressed before encryption)
+  const dataSize = JSON.stringify(body).length
+  if (dataSize > 2_000_000) {
+    throw createError({
+      statusCode: 413,
+      statusMessage: 'Content too large. Maximum size is ~2MB.',
+    })
+  }
 
   // Expiration: default 2 days, max 30 days
   // GitHub Actions cron runs at JST 00:00 (UTC 15:00) — store at JST 23:59:59 (= UTC 14:59:59)

@@ -4,18 +4,21 @@
       <div class="space-y-4">
         <!-- File Selection -->
         <div class="space-y-1.5">
-          <label class="text-xs font-medium text-default">{{ generated ? $t('share.selectedFiles') : $t('share.selectFiles') }}</label>
+          <label class="text-xs font-medium text-default">{{ generated ? $t('share.selectedFiles') : $t('share.selectFiles') }} <span class="text-muted font-normal">({{ $t('share.maxFileSize') }})</span></label>
           <div class="border border-default rounded-lg divide-y divide-default max-h-48 overflow-y-auto">
             <label
               v-for="f in displayedFiles"
               :key="f.id"
               class="flex items-center gap-2 px-3 py-2 transition-colors"
-              :class="generated ? '' : 'cursor-pointer hover:bg-elevated'"
+              :class="[generated ? '' : 'cursor-pointer hover:bg-elevated', fileOverLimit(f.id) && !generated ? 'opacity-50 pointer-events-none' : '']"
             >
-              <UCheckbox v-if="!generated" :model-value="selectedIds.has(f.id)" @update:model-value="toggle(f.id)" />
+              <UCheckbox v-if="!generated" :model-value="selectedIds.has(f.id)" :disabled="fileOverLimit(f.id)" @update:model-value="toggle(f.id)" />
               <UIcon :name="fileIcon(f.language)" class="w-3.5 h-3.5 text-muted shrink-0" />
               <span class="text-xs truncate flex-1">{{ f.leftPath || f.rightPath || $t('diffFile.fallbackName', { index: 1 }) }}</span>
-              <span class="text-xs text-muted shrink-0 font-mono tabular-nums" :title="$t('share.sizeHint')">{{ fileSizeText(f.id) }}</span>
+              <span v-if="fileSizesReady" class="flex items-center gap-1 shrink-0">
+                <UBadge size="sm" color="primary" variant="subtle" class="font-mono">gzip</UBadge>
+                <span class="text-xs text-muted font-mono tabular-nums">{{ fileSizeText(f.id) }}</span>
+              </span>
               <span v-if="f.leftContent !== f.rightContent" class="w-1.5 h-1.5 rounded-full bg-warning shrink-0" />
             </label>
             <div v-if="!displayedFiles.length" class="px-3 py-4 text-center text-xs text-muted">
@@ -23,11 +26,8 @@
             </div>
           </div>
           <div v-if="!generated" class="flex items-center gap-2">
-            <UButton size="sm" variant="soft" @click="selectAll">{{ $t('share.selectAll') }}</UButton>
-            <UButton size="sm" variant="soft" @click="deselectAll">{{ $t('share.deselectAll') }}</UButton>
-          </div>
-          <div v-if="fileSizesReady && !generated" class="text-xs text-muted text-right">
-            {{ $t('share.sizeNote') }}
+            <UButton size="xs" variant="soft" @click="selectAll">{{ $t('share.selectAll') }}</UButton>
+            <UButton size="xs" variant="soft" @click="deselectAll">{{ $t('share.deselectAll') }}</UButton>
           </div>
         </div>
 
@@ -120,7 +120,7 @@ const { t } = useI18n()
 const open = defineModel<boolean>('open', { default: false })
 const historyOpen = ref(false)
 
-const MAX_FILE_SIZE = 990_000 // per-file estimated POST body limit (under 1MB server limit)
+const MAX_FILE_SIZE = 2_000_000 // per-file estimated POST body limit
 const fileSizes = ref<Record<string, number>>({})
 const fileSizesReady = ref(false)
 
@@ -135,8 +135,8 @@ const lockedExpiresAt = ref('')
 
 function estimateFileSize(file: DiffFile): number {
   const raw = new TextEncoder().encode(JSON.stringify({ files: [file] }))
-  // const compressed = pakoDeflate(raw)  // compression disabled for testing
-  const base64DataLen = Math.ceil(raw.length / 3) * 4
+  const compressed = pakoDeflate(raw)
+  const base64DataLen = Math.ceil(compressed.length / 3) * 4
   // Exact POST body length: JSON wrapper + base64 data + iv(16) + salt(24) + ownerToken(24)
   const overhead = JSON.stringify({
     encryptedData: '', iv: '', salt: '', fileCount: 1,
@@ -208,7 +208,7 @@ function toggle(id: string) {
   if (s.has(id)) s.delete(id); else s.add(id)
   selectedIds.value = s
 }
-function selectAll() { selectedIds.value = new Set(filesWithContent.value.map(f => f.id)) }
+function selectAll() { selectedIds.value = new Set(filesWithContent.value.filter(f => !fileOverLimit(f.id)).map(f => f.id)) }
 function deselectAll() { selectedIds.value = new Set() }
 
 function fileIcon(lang: string): string {
