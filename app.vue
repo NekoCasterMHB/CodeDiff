@@ -3,7 +3,7 @@
     <UHeader :ui="{ header: 'px-2!', container: 'w-full! max-w-full!' }">
       <template #left>
         <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-lg bg-(--ui-primary) flex items-center justify-center cursor-pointer" @click="navigateTo('/')">
+          <div class="w-7 h-7 rounded-lg bg-primary flex items-center justify-center cursor-pointer" @click="navigateTo('/')">
             <UIcon name="i-lucide-git-compare-arrows" class="w-4 h-4 text-(--ui-bg)" />
           </div>
           <span class="font-bold text-lg cursor-pointer" @click="navigateTo('/')">CodeDiff</span>
@@ -28,7 +28,7 @@
           icon="i-lucide-share-2"
           size="sm"
           variant="soft"
-          @click="shareOpen = true"
+          @click="openShareDialog"
         >
           {{ $t('header.share') }}
         </UButton>
@@ -62,10 +62,6 @@
 import type { DropdownMenuItem } from '@nuxt/ui'
 
 const colorMode = useColorMode()
-if (import.meta.server) {
-  colorMode.preference = 'light'
-  colorMode.value = 'light'
-}
 
 const { locale, locales, setLocale } = useI18n()
 
@@ -80,9 +76,11 @@ useHead({
 })
 const route = useRoute()
 const sidebarOpen = useState('sidebar-open', () => true)
-const shareOpen = ref(false)
 
 const isViewPage = computed(() => route.path.startsWith('/view'))
+
+const shareOpen = ref(false)
+function openShareDialog() { shareOpen.value = true }
 
 const flagIcons: Record<string, string> = {
   ja: 'i-openmoji-flag-japan',

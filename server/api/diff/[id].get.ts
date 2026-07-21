@@ -33,5 +33,8 @@ export default defineEventHandler(async (event) => {
     fileCount: result.file_count as number,
     createdAt: result.created_at as string,
     expiresAt: result.expires_at as string,
+    shareGroup: result.share_group as string | null,
+    segmentIndex: (result.segment_index as number) ?? 0,
+    totalSegments: (result.total_segments as number) ?? 1,
   }
 })

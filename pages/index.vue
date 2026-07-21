@@ -15,18 +15,18 @@
         <div class="flex items-center gap-2 w-full min-w-0" :class="open ? '' : 'justify-center'">
           <UIcon
             :name="open ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'"
-            class="w-4 h-4 text-(--ui-text-muted) shrink-0 cursor-pointer hover:text-(--ui-text) transition-colors"
+            class="w-4 h-4 text-muted shrink-0 cursor-pointer hover:text-default transition-colors"
             @click="open = !open"
           />
-          <span class="text-sm font-semibold text-(--ui-text-highlighted) truncate group-data-[state=collapsed]/sidebar:hidden">{{ $t('sidebar.title') }}</span>
+          <span class="text-sm font-semibold text-highlighted truncate group-data-[state=collapsed]/sidebar:hidden">{{ $t('sidebar.title') }}</span>
           <div class="flex-1" />
           <UButton
             icon="i-lucide-file-plus"
-            size="2xs"
+            size="xs"
             variant="ghost"
             color="neutral"
             class="group-data-[state=collapsed]/sidebar:hidden shrink-0"
-            @click="diff.addFile()"
+            @click="() => { diff.addFile() }"
           />
         </div>
       </template>
@@ -38,24 +38,24 @@
     <!-- Main Content -->
     <div class="flex-1 flex flex-col min-w-0">
       <!-- Toolbar -->
-      <div class="flex items-center gap-2 h-10 px-3 border-b border-(--ui-border) bg-(--ui-bg-elevated) shrink-0">
-        <UIcon name="i-lucide-file-text" class="w-4 h-4 text-(--ui-text-muted) shrink-0" />
+      <div class="flex items-center gap-2 h-10 px-3 border-b border-default bg-elevated shrink-0">
+        <UIcon name="i-lucide-file-text" class="w-4 h-4 text-muted shrink-0" />
         <UInput
           :model-value="fileName"
           :placeholder="$t('toolbar.fileName')"
-          size="2xs"
+          size="xs"
           class="flex-1 text-xs"
           :ui="{ base: 'px-3 py-1' }"
           @update:model-value="updateFileName"
         />
         <div class="flex-1" />
-        <UButton icon="i-lucide-file-plus" size="2xs" variant="ghost" color="neutral" @click="diff.addFile()" />
-        <div class="w-px h-4 bg-(--ui-border)" />
-        <span class="text-xs text-(--ui-text-muted) shrink-0">{{ $t('toolbar.diffNav') }}</span>
-        <div class="flex items-center bg-(--ui-primary)/10 border border-(--ui-primary)/20 rounded-md overflow-hidden">
-          <UButton icon="i-lucide-chevron-up" size="xs" variant="ghost" color="neutral" class="hover:bg-(--ui-primary)/30 rounded-none" @click="goPrevDiff" />
-          <span class="text-xs text-(--ui-text) min-w-7 text-center font-mono">{{ diffNavText }}</span>
-          <UButton icon="i-lucide-chevron-down" size="xs" variant="ghost" color="neutral" class="hover:bg-(--ui-primary)/30 rounded-none" @click="goNextDiff" />
+        <UButton icon="i-lucide-file-plus" size="xs" variant="ghost" color="neutral" @click="() => { diff.addFile() }" />
+        <div class="w-px h-4 bg-border" />
+        <span class="text-xs text-muted shrink-0">{{ $t('toolbar.diffNav') }}</span>
+        <div class="flex items-center bg-primary/10 border border-primary/20 rounded-md overflow-hidden">
+          <UButton icon="i-lucide-chevron-up" size="xs" variant="ghost" color="neutral" class="hover:bg-primary/30 rounded-none" @click="goPrevDiff" />
+          <span class="text-xs text-default min-w-7 text-center font-mono">{{ diffNavText }}</span>
+          <UButton icon="i-lucide-chevron-down" size="xs" variant="ghost" color="neutral" class="hover:bg-primary/30 rounded-none" @click="goNextDiff" />
         </div>
       </div>
 
@@ -66,10 +66,10 @@
         @dragleave="onDragLeave"
         @drop.prevent="onDrop"
       >
-        <div v-if="dragging" class="absolute inset-0 z-20 flex items-center justify-center bg-(--ui-primary)/5 border-2 border-dashed border-(--ui-primary) m-2 rounded-lg pointer-events-none">
+        <div v-if="dragging" class="absolute inset-0 z-20 flex items-center justify-center bg-primary/5 border-2 border-dashed border-primary m-2 rounded-lg pointer-events-none">
           <div class="text-center">
-            <UIcon name="i-lucide-file-up" class="w-8 h-8 text-(--ui-primary) mx-auto mb-1" />
-            <p class="text-xs text-(--ui-primary)">{{ $t('editor.dropHint') }}</p>
+            <UIcon name="i-lucide-file-up" class="w-8 h-8 text-primary mx-auto mb-1" />
+            <p class="text-xs text-primary">{{ $t('editor.dropHint') }}</p>
           </div>
         </div>
 
@@ -86,7 +86,7 @@
             @update:left-content="v => updateFile('leftContent', v)"
             @update:right-content="v => updateFile('rightContent', v)"
           />
-          <div v-else class="flex items-center justify-center h-full text-(--ui-text-muted)">
+          <div v-else class="flex items-center justify-center h-full text-muted">
             <div class="text-center">
               <UIcon name="i-lucide-file-code" class="w-8 h-8 mx-auto mb-2 opacity-30" />
               <p class="text-xs">{{ $t('editor.empty') }}</p>
@@ -94,7 +94,7 @@
           </div>
           <template #fallback>
             <div class="flex items-center justify-center h-full">
-              <UIcon name="i-lucide-loader-circle" class="w-5 h-5 animate-spin text-(--ui-text-muted)" />
+              <UIcon name="i-lucide-loader-circle" class="w-5 h-5 animate-spin text-muted" />
             </div>
           </template>
         </ClientOnly>

@@ -1,5 +1,5 @@
 <template>
-  <UModal v-model:open="open" :title="$t('share.title')">
+  <UModal v-model:open="open" :title="$t('share.title')" :dismissible="false">
     <template #body>
       <div class="space-y-4">
         <!-- File Selection -->
@@ -14,8 +14,9 @@
             >
               <UCheckbox v-if="!generated" :model-value="selectedIds.has(f.id)" @update:model-value="toggle(f.id)" />
               <UIcon :name="fileIcon(f.language)" class="w-3.5 h-3.5 text-muted shrink-0" />
-              <span class="text-xs truncate">{{ f.leftPath || f.rightPath || $t('diffFile.fallbackName', { index: 1 }) }}</span>
-              <span v-if="f.leftContent !== f.rightContent" class="w-1.5 h-1.5 rounded-full bg-warning shrink-0 ml-auto" />
+              <span class="text-xs truncate flex-1">{{ f.leftPath || f.rightPath || $t('diffFile.fallbackName', { index: 1 }) }}</span>
+              <span class="text-xs text-muted shrink-0 font-mono tabular-nums" :title="$t('share.sizeHint')">{{ fileSizeText(f.id) }}</span>
+              <span v-if="f.leftContent !== f.rightContent" class="w-1.5 h-1.5 rounded-full bg-warning shrink-0" />
             </label>
             <div v-if="!displayedFiles.length" class="px-3 py-4 text-center text-xs text-muted">
               {{ $t('share.noFiles') }}
@@ -24,6 +25,9 @@
           <div v-if="!generated" class="flex items-center gap-2">
             <UButton size="sm" variant="soft" @click="selectAll">{{ $t('share.selectAll') }}</UButton>
             <UButton size="sm" variant="soft" @click="deselectAll">{{ $t('share.deselectAll') }}</UButton>
+          </div>
+          <div v-if="fileSizesReady && !generated" class="text-xs text-muted text-right">
+            {{ $t('share.sizeNote') }}
           </div>
         </div>
 
@@ -80,30 +84,45 @@
 
     <template #footer>
       <div class="flex justify-between items-center w-full">
-        <span class="text-xs text-muted">{{ selectedIds.size }}/{{ filesWithContent.length }} {{ $t('share.selected') }}</span>
-        <div class="flex gap-2">
-          <UButton v-if="!shareUrl" variant="soft" color="neutral" size="sm" @click="() => { open = false }">
-            {{ $t('share.cancel') }}
+        <div class="flex items-center gap-2">
+          <UButton
+            icon="i-lucide-clock"
+            size="sm"
+            variant="subtle"
+            color="neutral"
+            @click="() => { historyOpen = true }"
+          >
+            {{ $t('share.history') }}
           </UButton>
+          <span class="text-xs text-muted">{{ selectedIds.size }}/{{ filesWithContent.length }} {{ $t('share.selected') }}</span>
+        </div>
+        <div class="flex gap-2">
           <UButton v-if="!shareUrl && !loading" icon="i-lucide-share" size="sm" @click="generateShare">
             {{ $t('share.generate') }}
-          </UButton>
-          <UButton v-if="shareUrl" variant="soft" size="sm" @click="() => { open = false }">
-            {{ $t('share.close') }}
           </UButton>
         </div>
       </div>
     </template>
   </UModal>
+
+  <ShareHistoryModal v-model:open="historyOpen" />
 </template>
 
 <script setup lang="ts">
 import type { DiffFile } from '~/types/diff'
+import { deflate as pakoDeflate } from 'pako'
 
 const diff = useDiff()
 const { encrypt, buildShareUrl, isCryptoAvailable, generatePassword } = useCrypto()
+const { add: addHistory } = useShareHistory()
+const { t } = useI18n()
 
 const open = defineModel<boolean>('open', { default: false })
+const historyOpen = ref(false)
+
+const MAX_FILE_SIZE = 990_000 // per-file estimated POST body limit (under 1MB server limit)
+const fileSizes = ref<Record<string, number>>({})
+const fileSizesReady = ref(false)
 
 const shareUrl = ref('')
 const loading = ref(false)
@@ -114,8 +133,40 @@ const selectedIds = ref(new Set<string>())
 const expiresInDays = ref(3)
 const lockedExpiresAt = ref('')
 
+function estimateFileSize(file: DiffFile): number {
+  const raw = new TextEncoder().encode(JSON.stringify({ files: [file] }))
+  // const compressed = pakoDeflate(raw)  // compression disabled for testing
+  const base64DataLen = Math.ceil(raw.length / 3) * 4
+  // Exact POST body length: JSON wrapper + base64 data + iv(16) + salt(24) + ownerToken(24)
+  const overhead = JSON.stringify({
+    encryptedData: '', iv: '', salt: '', fileCount: 1,
+    expiresInDays: expiresInDays.value, shareGroup: null,
+    segmentIndex: 0, totalSegments: 1, ownerToken: '',
+  }).length
+  return overhead + base64DataLen + 16 + 24 + 24
+}
+
+function computeFileSizes() {
+  const map: Record<string, number> = {}
+  for (const f of filesWithContent.value) {
+    map[f.id] = estimateFileSize(f)
+  }
+  fileSizes.value = map
+  fileSizesReady.value = true
+}
+
+function fileOverLimit(id: string) {
+  return (fileSizes.value[id] || 0) > MAX_FILE_SIZE
+}
+
+function fileSizeText(id: string) {
+  const size = fileSizes.value[id]
+  if (!size) return '...'
+  if (size >= 1_000_000) return `${(size / 1_000_000).toFixed(1)}MB`
+  return `${Math.round(size / 1000)}KB`
+}
+
 function calcExpireDate(days: number): string {
-  // Use JST (UTC+9) to match cleanup cron timezone (GitHub Actions: JST 00:00 = UTC 15:00)
   const now = new Date()
   const jstNow = new Date(now.getTime() + 9 * 3600_000)
   jstNow.setUTCDate(jstNow.getUTCDate() + days)
@@ -128,19 +179,17 @@ function calcExpireDate(days: number): string {
 
 const expiresAtText = computed(() => calcExpireDate(expiresInDays.value))
 
-// Files that have at least some content
 const filesWithContent = computed(() =>
   diff.files.value.filter(f => f.leftContent || f.rightContent)
 )
 
-// After generation: only show selected files; before: show all
 const displayedFiles = computed(() =>
   generated.value
     ? filesWithContent.value.filter(f => selectedIds.value.has(f.id))
     : filesWithContent.value
 )
 
-// Reset selection when dialog opens
+// Reset state when dialog opens
 watch(open, (v) => {
   if (v) {
     shareUrl.value = ''
@@ -149,6 +198,8 @@ watch(open, (v) => {
     lockedExpiresAt.value = ''
     expiresInDays.value = 3
     selectedIds.value = new Set(filesWithContent.value.filter(f => f.leftContent !== f.rightContent).map(f => f.id))
+    // Compute sizes asynchronously — pako.deflate is fast but still off the main thread
+    setTimeout(computeFileSizes, 0)
   }
 })
 
@@ -167,30 +218,54 @@ function fileIcon(lang: string): string {
 
 async function generateShare() {
   error.value = ''
-  if (selectedIds.value.size === 0) { error.value = '请至少选择一个文件。'; return }
+  if (selectedIds.value.size === 0) { error.value = t('share.selectAtLeastOne'); return }
   loading.value = true
 
   try {
-    if (!isCryptoAvailable()) throw new Error('当前浏览器不支持 Web Crypto API。')
+    if (!isCryptoAvailable()) throw new Error(t('view.noCrypto'))
 
     const selectedFiles = filesWithContent.value.filter(f => selectedIds.value.has(f.id))
-    const shareData = { files: selectedFiles }
-
     const password = generatePassword()
-    const { encryptedData, iv, salt } = await encrypt(shareData, password)
+    const ownerToken = generatePassword(24)
+    const totalSegments = selectedFiles.length
+    const shareGroup = totalSegments > 1 ? crypto.randomUUID() : null
 
-    const response = await $fetch<{ id: string; url: string }>('/api/diff/create', {
-      method: 'POST',
-      body: { encryptedData, iv, salt, fileCount: selectedFiles.length, expiresInDays: expiresInDays.value },
-    })
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const { encryptedData, iv, salt } = await encrypt({ files: [selectedFiles[i]] }, password)
 
-    shareUrl.value = buildShareUrl(response.id, password)
+      // eslint-disable-next-line no-await-in-loop
+      const response = await $fetch<{ id: string; url: string }>('/api/diff/create', {
+        method: 'POST',
+        body: {
+          encryptedData, iv, salt,
+          fileCount: 1,
+          expiresInDays: expiresInDays.value,
+          shareGroup, segmentIndex: i, totalSegments,
+          ownerToken,
+        },
+      })
 
-    // Lock expiration display and disable file selection
+      if (i === 0) {
+        shareUrl.value = buildShareUrl(response.id, password)
+      }
+    }
+
     lockedExpiresAt.value = calcExpireDate(expiresInDays.value)
     generated.value = true
+
+    // Save to share history (with ownerToken for delete authorization)
+    const now = new Date()
+    await addHistory({
+      id: shareGroup || selectedFiles[0]?.id || Date.now().toString(),
+      shareUrl: shareUrl.value,
+      fileNames: selectedFiles.map(f => f.leftPath || f.rightPath || ''),
+      fileCount: selectedFiles.length,
+      createdAt: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      expiresAt: lockedExpiresAt.value,
+      ownerToken,
+    })
   } catch (err: any) {
-    error.value = err.data?.statusMessage || err.message || '生成分享链接失败。'
+    error.value = err.data?.statusMessage || err.message || t('share.generateFailed')
   } finally {
     loading.value = false
   }

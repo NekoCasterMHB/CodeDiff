@@ -24,6 +24,13 @@ export async function initDB(event: any) {
   await db.exec(`ALTER TABLE diffs ADD COLUMN expires_at TEXT`).catch(() => {})
   await db.exec(`CREATE INDEX IF NOT EXISTS idx_diffs_created_at ON diffs(created_at)`)
   await db.exec(`CREATE INDEX IF NOT EXISTS idx_diffs_expires_at ON diffs(expires_at)`)
+  // Migration: add segmented sharing columns (safe to retry)
+  await db.exec(`ALTER TABLE diffs ADD COLUMN share_group TEXT`).catch(() => {})
+  await db.exec(`ALTER TABLE diffs ADD COLUMN segment_index INTEGER`).catch(() => {})
+  await db.exec(`ALTER TABLE diffs ADD COLUMN total_segments INTEGER`).catch(() => {})
+  await db.exec(`CREATE INDEX IF NOT EXISTS idx_diffs_share_group ON diffs(share_group)`)
+  // Migration: add owner_token column (safe to retry)
+  await db.exec(`ALTER TABLE diffs ADD COLUMN owner_token TEXT`).catch(() => {})
 }
 
 function createLocalDB() {
@@ -39,7 +46,30 @@ function createLocalDB() {
               }
               return null
             },
+            async all() {
+              if (sql.includes('share_group')) {
+                const groupId = args[0]
+                const all: any[] = []
+                localStore.forEach((v) => {
+                  if (v.share_group === groupId) all.push(v)
+                })
+                all.sort((a, b) => (a.segment_index || 0) - (b.segment_index || 0))
+                return { results: all }
+              }
+              return { results: [] }
+            },
             async run() {
+              if (sql.includes('DELETE')) {
+                if (sql.includes('share_group')) {
+                  const groupId = args[0]
+                  localStore.forEach((v, k) => {
+                    if (v.share_group === groupId) localStore.delete(k)
+                  })
+                } else {
+                  localStore.delete(args[0])
+                }
+                return { success: true }
+              }
               if (sql.includes('INSERT')) {
                 localStore.set(args[0], {
                   id: args[0],
@@ -48,6 +78,10 @@ function createLocalDB() {
                   salt: args[3],
                   file_count: args[4] || 1,
                   expires_at: args[5] || null,
+                  share_group: args[6] || null,
+                  segment_index: args[7] || 0,
+                  total_segments: args[8] || 1,
+                  owner_token: args[9] || null,
                   created_at: new Date().toISOString(),
                 })
               }

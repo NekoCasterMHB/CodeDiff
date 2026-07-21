@@ -5,11 +5,19 @@ const DB_NAME = 'codediff-db'
 const STORE_NAME = 'files'
 const KEY_FILES = 'diff-files'
 const KEY_ACTIVE = 'diff-active'
+const STORE_HISTORY = 'share-history'
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1)
-    req.onupgradeneeded = () => { req.result.createObjectStore(STORE_NAME) }
+    const req = indexedDB.open(DB_NAME, 3)
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(STORE_NAME)) {
+        req.result.createObjectStore(STORE_NAME)
+      }
+      if (!req.result.objectStoreNames.contains(STORE_HISTORY)) {
+        req.result.createObjectStore(STORE_HISTORY)
+      }
+    }
     req.onsuccess = () => resolve(req.result)
     req.onerror = () => reject(req.error)
   })

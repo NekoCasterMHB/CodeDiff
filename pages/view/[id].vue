@@ -1,10 +1,10 @@
 <template>
   <div class="h-full flex">
     <!-- Sidebar: File List -->
-    <aside class="w-56 flex flex-col border-r border-(--ui-border) bg-(--ui-bg-elevated) shrink-0">
-      <div class="flex items-center gap-2 px-3 py-2.5 border-b border-(--ui-border)">
-        <UIcon name="i-lucide-folder-tree" class="w-4 h-4 text-(--ui-text-muted) shrink-0" />
-        <span class="text-xs font-semibold text-(--ui-text-muted) uppercase tracking-wider">{{ $t('view.files') }}</span>
+    <aside class="w-56 flex flex-col border-r border-default bg-elevated shrink-0">
+      <div class="flex items-center gap-2 px-3 py-2.5 border-b border-default">
+        <UIcon name="i-lucide-folder-tree" class="w-4 h-4 text-muted shrink-0" />
+        <span class="text-xs font-semibold text-muted uppercase tracking-wider">{{ $t('view.files') }}</span>
       </div>
       <div class="flex-1 overflow-y-auto py-1">
         <div
@@ -13,14 +13,14 @@
           :class="[
             'flex items-center gap-2 mx-1.5 px-2.5 py-2 rounded-md cursor-pointer transition-colors text-sm border-l-2',
             activeFileId === f.id
-              ? 'bg-(--ui-primary)/12 text-(--ui-primary) font-medium border-l-(--ui-primary)'
-              : 'hover:bg-(--ui-bg-muted) text-(--ui-text) border-l-transparent',
+              ? 'bg-primary/12 text-primary font-medium border-l-primary'
+              : 'hover:bg-muted text-default border-l-transparent',
           ]"
           @click="activeFileId = f.id"
         >
-          <UIcon :name="fileIcon(f.language)" class="w-4 h-4 shrink-0" :class="activeFileId === f.id ? 'text-(--ui-primary)' : 'text-(--ui-text-muted)'" />
+          <UIcon :name="fileIcon(f.language)" class="w-4 h-4 shrink-0" :class="activeFileId === f.id ? 'text-primary' : 'text-muted'" />
           <span class="flex-1 truncate text-xs">{{ f.leftPath || f.rightPath || `文件 ${i + 1}` }}</span>
-          <span v-if="f.leftContent !== f.rightContent" class="w-1.5 h-1.5 rounded-full bg-(--ui-warning) shrink-0" />
+          <span v-if="f.leftContent !== f.rightContent" class="w-1.5 h-1.5 rounded-full bg-warning shrink-0" />
         </div>
       </div>
     </aside>
@@ -28,30 +28,30 @@
     <!-- Content -->
     <div class="flex-1 flex flex-col min-w-0 min-h-0">
       <div v-if="loading" class="flex-1 flex items-center justify-center">
-        <UIcon name="i-lucide-loader-circle" class="w-6 h-6 animate-spin text-(--ui-text-muted)" />
+        <UIcon name="i-lucide-loader-circle" class="w-6 h-6 animate-spin text-muted" />
       </div>
 
       <div v-else-if="error" class="flex-1 flex items-center justify-center">
         <div class="text-center">
-          <UIcon name="i-lucide-triangle-alert" class="w-10 h-10 text-(--ui-error) mx-auto mb-3" />
-          <p class="text-sm text-(--ui-text-muted)">{{ error }}</p>
+          <UIcon name="i-lucide-triangle-alert" class="w-10 h-10 text-error mx-auto mb-3" />
+          <p class="text-sm text-muted">{{ error }}</p>
           <UButton size="sm" class="mt-3" @click="navigateTo('/')">返回首页</UButton>
         </div>
       </div>
 
       <div v-else-if="activeFile" class="flex-1 flex flex-col min-h-0">
         <!-- File name bar + diff nav -->
-        <div class="flex items-center h-8 px-3 border-b border-(--ui-border) bg-(--ui-bg-elevated) shrink-0 gap-1.5">
-          <UIcon name="i-lucide-file-text" class="w-3.5 h-3.5 text-(--ui-text-muted) shrink-0" />
-          <span class="text-xs text-(--ui-text) truncate flex-1">{{ activeFile.leftPath || activeFile.rightPath || 'untitled' }}</span>
-          <div class="w-px h-4 bg-(--ui-border)" />
-          <span class="text-xs text-(--ui-text-muted) shrink-0">{{ $t('toolbar.diffNav') }}</span>
-          <div class="flex items-center bg-(--ui-primary)/10 border border-(--ui-primary)/20 rounded-md overflow-hidden">
-          <UButton icon="i-lucide-chevron-up" size="xs" variant="ghost" color="neutral" class="hover:bg-(--ui-primary)/30 rounded-none" @click="goPrevDiff" />
-            <span class="text-xs text-(--ui-text) min-w-7 text-center font-mono">{{ diffNavText }}</span>
-          <UButton icon="i-lucide-chevron-down" size="xs" variant="ghost" color="neutral" class="hover:bg-(--ui-primary)/30 rounded-none" @click="goNextDiff" />
+        <div class="flex items-center h-8 px-3 border-b border-default bg-elevated shrink-0 gap-1.5">
+          <UIcon name="i-lucide-file-text" class="w-3.5 h-3.5 text-muted shrink-0" />
+          <span class="text-xs text-default truncate flex-1">{{ activeFile.leftPath || activeFile.rightPath || 'untitled' }}</span>
+          <div class="w-px h-4 bg-border" />
+          <span class="text-xs text-muted shrink-0">{{ $t('toolbar.diffNav') }}</span>
+          <div class="flex items-center bg-primary/10 border border-primary/20 rounded-md overflow-hidden">
+          <UButton icon="i-lucide-chevron-up" size="xs" variant="ghost" color="neutral" class="hover:bg-primary/30 rounded-none" @click="goPrevDiff" />
+            <span class="text-xs text-default min-w-7 text-center font-mono">{{ diffNavText }}</span>
+          <UButton icon="i-lucide-chevron-down" size="xs" variant="ghost" color="neutral" class="hover:bg-primary/30 rounded-none" @click="goNextDiff" />
           </div>
-          <div class="flex items-center gap-1.5 text-xs text-(--ui-text-muted) ml-auto" v-if="expiresRemaining">
+          <div class="flex items-center gap-1.5 text-xs text-muted ml-auto" v-if="expiresRemaining">
             <UIcon name="i-lucide-clock" class="w-3 h-3 shrink-0" />
             <span>{{ expiresRemaining }}</span>
           </div>
@@ -69,14 +69,14 @@
             />
             <template #fallback>
               <div class="flex items-center justify-center h-full">
-                <UIcon name="i-lucide-loader-circle" class="w-5 h-5 animate-spin text-(--ui-text-muted)" />
+                <UIcon name="i-lucide-loader-circle" class="w-5 h-5 animate-spin text-muted" />
               </div>
             </template>
           </ClientOnly>
         </div>
       </div>
 
-      <div v-else class="flex-1 flex items-center justify-center text-(--ui-text-muted) text-xs">无内容</div>
+      <div v-else class="flex-1 flex items-center justify-center text-muted text-xs">无内容</div>
     </div>
   </div>
 </template>
@@ -160,16 +160,32 @@ async function loadDiff() {
     if (!isCryptoAvailable()) throw new Error('当前浏览器不支持 Web Crypto API。')
     const id = route.params.id as string
     if (!id) throw new Error('无效的分享链接。')
-    const record = await $fetch<{ id: string; encryptedData: string; iv: string; salt: string; fileCount: number; createdAt: string; expiresAt: string }>(`/api/diff/${id}`)
+    const record = await $fetch<{ id: string; encryptedData: string; iv: string; salt: string; fileCount: number; createdAt: string; expiresAt: string; shareGroup: string | null; segmentIndex: number; totalSegments: number }>(`/api/diff/${id}`)
     expiresAt.value = record.expiresAt
     updateExpiresRemaining()
     expireTimer = setInterval(updateExpiresRemaining, 10_000)
     const password = getPasswordFromHash()
     if (!password) throw new Error('链接中缺少解密密码（#pwd=...）。')
-    let decrypted: { files: DiffFile[] }
-    try { decrypted = await decrypt(record.encryptedData, record.iv, record.salt, password) }
-    catch { throw new Error('解密失败，密码可能不正确。') }
-    files.value = decrypted.files || []
+
+    // Fetch all segments if this is a segmented share
+    const segments = [{ ...record }]
+    if (record.shareGroup && record.totalSegments > 1) {
+      const groupSegments = await $fetch<Array<{ id: string; encryptedData: string; iv: string; salt: string; segmentIndex: number }>>(`/api/diff/group/${record.shareGroup}`)
+      for (const seg of groupSegments) {
+        if (!segments.some(s => s.id === seg.id)) segments.push(seg)
+      }
+      segments.sort((a, b) => a.segmentIndex - b.segmentIndex)
+    }
+
+    // Decrypt and merge all segments
+    let allFiles: DiffFile[] = []
+    for (const seg of segments) {
+      let decrypted: { files: DiffFile[] }
+      try { decrypted = await decrypt(seg.encryptedData, seg.iv, seg.salt, password) }
+      catch { throw new Error('解密失败，密码可能不正确。') }
+      allFiles = allFiles.concat(decrypted.files || [])
+    }
+    files.value = allFiles
     activeFileId.value = files.value[0]?.id || ''
   } catch (err: any) {
     error.value = err.data?.statusMessage || err.message || '加载失败'

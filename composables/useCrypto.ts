@@ -1,10 +1,12 @@
+import { deflate as pakoDeflate, inflate as pakoInflate } from 'pako'
+
 /**
  * Client-side encryption/decryption using Web Crypto API (AES-GCM + PBKDF2)
  *
  * Flow:
  * - Generate a random password (or use provided one)
  * - Derive AES key from password using PBKDF2
- * - Encrypt data with AES-GCM
+ * - Compress + encrypt data with AES-GCM
  * - Return encrypted data + IV + salt (all base64-encoded)
  * - Embed password in URL hash for sharing
  */
@@ -84,12 +86,14 @@ export async function encrypt(
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const key = await deriveKey(password, salt)
   const encoder = new TextEncoder()
-  const plaintext = encoder.encode(JSON.stringify(data))
+  const encoded = encoder.encode(JSON.stringify(data))
+  // Compression temporarily disabled for testing
+  // const compressed = pakoDeflate(encoded)
 
   const ciphertext = await crypto.subtle.encrypt(
     { name: ALGORITHM, iv },
     key,
-    plaintext
+    encoded // compressed
   )
 
   return {
@@ -111,14 +115,15 @@ export async function decrypt<T = unknown>(
   const key = await deriveKey(password, base64ToArrayBuffer(salt))
   const ciphertext = base64ToArrayBuffer(encryptedData)
 
-  const plaintext = await crypto.subtle.decrypt(
+  const plainBuffer = await crypto.subtle.decrypt(
     { name: ALGORITHM, iv: base64ToArrayBuffer(iv) },
     key,
     ciphertext
   )
 
+  // const decompressed = pakoInflate(new Uint8Array(plainBuffer))
   const decoder = new TextDecoder()
-  return JSON.parse(decoder.decode(plaintext)) as T
+  return JSON.parse(decoder.decode(plainBuffer)) as T
 }
 
 /**

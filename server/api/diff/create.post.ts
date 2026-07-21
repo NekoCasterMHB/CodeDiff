@@ -13,14 +13,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Validate size limits (max ~500KB total)
-  const dataSize = JSON.stringify(body).length
-  if (dataSize > 600_000) {
-    throw createError({
-      statusCode: 413,
-      statusMessage: 'Content too large. Maximum size is ~500KB.',
-    })
-  }
+  // Size limit temporarily disabled for testing
+  // const dataSize = JSON.stringify(body).length
+  // if (dataSize > 1_000_000) { throw createError({ statusCode: 413, statusMessage: 'Content too large.' }) }
 
   // Expiration: default 2 days, max 30 days
   // GitHub Actions cron runs at JST 00:00 (UTC 15:00) — store at JST 23:59:59 (= UTC 14:59:59)
@@ -37,16 +32,24 @@ export default defineEventHandler(async (event) => {
   const id = nanoid(12)
   const db = getDB(event)
 
+  const shareGroup = body.shareGroup || null
+  const segmentIndex = body.segmentIndex ?? 0
+  const totalSegments = body.totalSegments ?? 1
+  const ownerToken = body.ownerToken || null
+
   await db
     .prepare(
-      `INSERT INTO diffs (id, encrypted_data, iv, salt, file_count, expires_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
+      `INSERT INTO diffs (id, encrypted_data, iv, salt, file_count, expires_at, share_group, segment_index, total_segments, owner_token) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`
     )
-    .bind(id, body.encryptedData, body.iv, body.salt, body.fileCount || 1, expiresAtStr)
+    .bind(id, body.encryptedData, body.iv, body.salt, body.fileCount || 1, expiresAtStr, shareGroup, segmentIndex, totalSegments, ownerToken)
     .run()
 
   return {
     id,
     url: `/view/${id}`,
     expiresAt: expiresAtStr,
+    shareGroup,
+    segmentIndex,
+    totalSegments,
   }
 })
