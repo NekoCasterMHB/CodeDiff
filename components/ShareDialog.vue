@@ -258,7 +258,7 @@ async function generateShare() {
     // Save to share history (with ownerToken for delete authorization)
     const now = new Date()
     await addHistory({
-      id: shareGroup || selectedFiles[0]?.id || Date.now().toString(),
+      id: shareUrl.value.split('/view/')[1]?.split('#')[0] || crypto.randomUUID(),
       shareUrl: shareUrl.value,
       fileNames: selectedFiles.map(f => f.leftPath || f.rightPath || ''),
       fileCount: selectedFiles.length,

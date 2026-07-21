@@ -94,13 +94,22 @@ function create() {
   setTimeout(() => diffEditor?.revealFirstDiff(), 100)
 
   if (!props.readOnly) {
+    let leftTimer: ReturnType<typeof setTimeout> | null = null
+    let rightTimer: ReturnType<typeof setTimeout> | null = null
     disposables.push(
-      originalModel.onDidChangeContent(() => emit('update:leftContent', originalModel!.getValue())),
-      modifiedModel.onDidChangeContent(() => emit('update:rightContent', modifiedModel!.getValue()))
+      originalModel.onDidChangeContent(() => {
+        if (leftTimer) clearTimeout(leftTimer)
+        leftTimer = setTimeout(() => { leftTimer = null; emit('update:leftContent', originalModel!.getValue()) }, 200)
+      }),
+      modifiedModel.onDidChangeContent(() => {
+        if (rightTimer) clearTimeout(rightTimer)
+        rightTimer = setTimeout(() => { rightTimer = null; emit('update:rightContent', modifiedModel!.getValue()) }, 200)
+      })
     )
   }
 }
 
+let syncTimer: ReturnType<typeof setTimeout> | null = null
 function sync() {
   if (!originalModel || !modifiedModel) return
   const lang = getLang(props.language)
@@ -110,7 +119,10 @@ function sync() {
   monaco.editor.setModelLanguage(modifiedModel, lang)
 }
 
-watch(() => [props.leftContent, props.rightContent, props.language], sync)
+watch(() => [props.leftContent, props.rightContent, props.language], () => {
+  if (syncTimer) clearTimeout(syncTimer)
+  syncTimer = setTimeout(sync, 100)
+})
 watch(() => props.theme, () => monaco.editor.setTheme(props.theme))
 
 onMounted(() => nextTick(create))
