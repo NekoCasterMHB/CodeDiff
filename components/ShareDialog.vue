@@ -231,6 +231,7 @@ async function generateShare() {
     const totalSegments = selectedFiles.length
     const shareGroup = totalSegments > 1 ? crypto.randomUUID() : null
 
+    let firstId = ''
     for (let i = 0; i < selectedFiles.length; i++) {
       progressText.value = `${i + 1}/${totalSegments}`
       const { encryptedData, iv, salt } = await encrypt({ files: [selectedFiles[i]] }, password)
@@ -247,10 +248,9 @@ async function generateShare() {
         },
       })
 
-      if (i === 0) {
-        shareUrl.value = buildShareUrl(response.id, password)
-      }
+      if (i === 0) firstId = response.id
     }
+    shareUrl.value = buildShareUrl(firstId, password)
 
     lockedExpiresAt.value = calcExpireDate(expiresInDays.value)
     generated.value = true
