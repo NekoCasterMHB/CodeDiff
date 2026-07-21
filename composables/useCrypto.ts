@@ -120,9 +120,13 @@ export async function decrypt<T = unknown>(
     ciphertext
   )
 
-  const decompressed = pakoInflate(new Uint8Array(plainBuffer))
+  let plainBytes = new Uint8Array(plainBuffer)
+  // Try decompress; fall back to raw data for backward compatibility with uncompressed data
+  try {
+    plainBytes = pakoInflate(plainBytes)
+  } catch { /* data wasn't compressed (legacy) */ }
   const decoder = new TextDecoder()
-  return JSON.parse(decoder.decode(decompressed)) as T
+  return JSON.parse(decoder.decode(plainBytes)) as T
 }
 
 /**

@@ -74,7 +74,7 @@
         <!-- Loading -->
         <div v-if="loading" class="flex items-center justify-center py-3">
           <UIcon name="i-lucide-loader-circle" class="w-4 h-4 animate-spin text-primary" />
-          <span class="ml-2 text-xs text-muted">{{ $t('share.encrypting') }}</span>
+          <span class="ml-2 text-xs text-muted">{{ $t('share.encrypting') }}<span v-if="progressText"> ({{ progressText }})</span></span>
         </div>
 
         <!-- Error -->
@@ -126,6 +126,7 @@ const fileSizesReady = ref(false)
 
 const shareUrl = ref('')
 const loading = ref(false)
+const progressText = ref('')
 const copied = ref(false)
 const error = ref('')
 const generated = ref(false)
@@ -231,6 +232,7 @@ async function generateShare() {
     const shareGroup = totalSegments > 1 ? crypto.randomUUID() : null
 
     for (let i = 0; i < selectedFiles.length; i++) {
+      progressText.value = `${i + 1}/${totalSegments}`
       const { encryptedData, iv, salt } = await encrypt({ files: [selectedFiles[i]] }, password)
 
       // eslint-disable-next-line no-await-in-loop
