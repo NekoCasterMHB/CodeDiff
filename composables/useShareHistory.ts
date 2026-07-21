@@ -26,11 +26,11 @@ async function saveAll(items: ShareHistoryItem[]) {
     const db = await openDB()
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readwrite')
-      const req = tx.objectStore(STORE_NAME).put(items, KEY)
-      req.onsuccess = () => resolve()
-      req.onerror = () => reject(req.error)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+      tx.objectStore(STORE_NAME).put(items, KEY)
     })
-  } catch { /* ignore */ }
+  } catch (e) { console.error('[ShareHistory] saveAll error:', e) }
 }
 
 async function loadAll(): Promise<ShareHistoryItem[]> {
