@@ -73,7 +73,10 @@ function create() {
     enableSplitViewResizing: true,
     renderOverviewRuler: true,
     contextmenu: false,
-    minimap: { enabled: false },
+    minimap: { enabled: true ,
+      renderCharacters: true,
+      maxColumn: 80,
+    },
     scrollBeyondLastLine: false,
     lineNumbers: 'on',
     lineNumbersMinChars: 4,
@@ -83,9 +86,9 @@ function create() {
     padding: { top: 12, bottom: 12 },
     wordWrap: 'off',
     glyphMargin: false,
-    folding: false,
+    folding: true,
     lineDecorationsWidth: 0,
-    renderIndicators: false,
+    renderIndicators: true,
   })
 
   diffEditor.setModel({ original: originalModel, modified: modifiedModel })
@@ -111,17 +114,23 @@ function create() {
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null
 function sync() {
-  if (!originalModel || !modifiedModel) return
+  if (!originalModel || !modifiedModel || !diffEditor) return
   const lang = getLang(props.language)
-  if (originalModel.getValue() !== props.leftContent) originalModel.setValue(props.leftContent)
-  if (modifiedModel.getValue() !== props.rightContent) modifiedModel.setValue(props.rightContent)
+  const origEd = diffEditor.getOriginalEditor()
+  const modEd = diffEditor.getModifiedEditor()
+  if (!origEd.hasTextFocus() && originalModel.getValue() !== props.leftContent) {
+    originalModel.setValue(props.leftContent)
+  }
+  if (!modEd.hasTextFocus() && modifiedModel.getValue() !== props.rightContent) {
+    modifiedModel.setValue(props.rightContent)
+  }
   monaco.editor.setModelLanguage(originalModel, lang)
   monaco.editor.setModelLanguage(modifiedModel, lang)
 }
 
 watch(() => [props.leftContent, props.rightContent, props.language], () => {
   if (syncTimer) clearTimeout(syncTimer)
-  syncTimer = setTimeout(sync, 100)
+  syncTimer = setTimeout(sync, 150)
 })
 watch(() => props.theme, () => monaco.editor.setTheme(props.theme))
 
