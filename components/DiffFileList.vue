@@ -27,6 +27,18 @@
       </div>
     </div>
 
+    <!-- Footer: GitHub link -->
+    <div class="px-2 py-2 border-t border-default">
+      <a
+        href="https://github.com/NekoCasterMHB/CodeDiff"
+        target="_blank"
+        class="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-muted hover:text-default hover:bg-muted transition-colors"
+      >
+        <UIcon name="i-simple-icons-github" class="w-4 h-4 shrink-0" />
+        <span>GitHub</span>
+      </a>
+    </div>
+
   </div>
 </template>
 
