@@ -5,7 +5,7 @@
         <!-- File Selection -->
         <div class="space-y-1.5">
           <label class="text-xs font-medium text-default">{{ generated ? $t('share.selectedFiles') : $t('share.selectFiles') }} <span class="text-muted font-normal">({{ $t('share.maxFileSize') }})</span></label>
-          <div class="border border-default rounded-lg divide-y divide-default max-h-48 overflow-y-auto">
+          <div class="border border-default rounded-lg divide-y divide-default max-h-48 overflow-y-auto scrollbar-always">
             <label
               v-for="f in displayedFiles"
               :key="f.id"
@@ -25,9 +25,12 @@
               {{ $t('share.noFiles') }}
             </div>
           </div>
-          <div v-if="!generated" class="flex items-center gap-2">
-            <UButton size="xs" variant="soft" @click="selectAll">{{ $t('share.selectAll') }}</UButton>
-            <UButton size="xs" variant="soft" @click="deselectAll">{{ $t('share.deselectAll') }}</UButton>
+          <div v-if="!generated" class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <UButton size="xs" variant="soft" @click="selectAll">{{ $t('share.selectAll') }}</UButton>
+              <UButton size="xs" variant="soft" @click="deselectAll">{{ $t('share.deselectAll') }}</UButton>
+            </div>
+            <span class="text-xs text-muted tabular-nums">{{ $t('share.selectedCount', { count: selectedIds.size, total: filesWithContent.length }) }}</span>
           </div>
         </div>
 
@@ -89,7 +92,7 @@
             icon="i-lucide-clock"
             size="sm"
             variant="subtle"
-            color="neutral"
+            color="primary"
             @click="() => { historyOpen = true }"
           >
             {{ $t('share.history') }}
@@ -97,7 +100,7 @@
           <span class="text-xs text-muted">{{ selectedIds.size }}/{{ filesWithContent.length }} {{ $t('share.selected') }}</span>
         </div>
         <div class="flex gap-2">
-          <UButton v-if="!shareUrl && !loading" icon="i-lucide-share" size="sm" @click="generateShare">
+          <UButton v-if="!shareUrl && !loading" :color="selectedIds.size === 0 ? 'neutral' : 'primary'" :variant="selectedIds.size === 0 ? 'subtle' : 'solid'" icon="i-lucide-share" size="sm" :disabled="selectedIds.size === 0" @click="generateShare">
             {{ $t('share.generate') }}
           </UButton>
         </div>

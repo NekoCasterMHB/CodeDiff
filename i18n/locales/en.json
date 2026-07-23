@@ -18,6 +18,7 @@
     "selectFiles": "Select files to share",
     "selectedFiles": "Shared files",
     "noFiles": "No files to share",
+    "selectedCount": "Selected {count} / {total}",
     "selectAtLeastOne": "Please select at least one file",
     "sizeHint": "Max ~2MB per file after encryption. Larger files cannot be selected.",
     "maxFileSize": "max 2MB per file",

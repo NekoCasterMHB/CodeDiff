@@ -18,6 +18,7 @@
     "selectFiles": "共有するファイルを選択",
     "selectedFiles": "共有中のファイル",
     "noFiles": "共有可能なファイルがありません",
+    "selectedCount": "選択中 {count} / {total}",
     "selectAtLeastOne": "少なくとも1つのファイルを選択してください",
     "sizeHint": "暗号化後 1 ファイルあたり最大約 2MB。超えると選択できません。",
     "maxFileSize": "1ファイル最大 2MB",
