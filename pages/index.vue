@@ -51,6 +51,15 @@
         <div class="flex-1" />
         <UButton icon="i-lucide-file-plus" size="xs" variant="ghost" color="neutral" @click="() => { diff.addFile() }" />
         <div class="w-px h-4 bg-border" />
+        <UButton
+          icon="i-lucide-arrow-left-right"
+          size="xs"
+          variant="ghost"
+          color="neutral"
+          :disabled="swapping"
+          @click="swapLeftRight"
+        />
+        <div class="w-px h-4 bg-border" />
         <span class="text-xs text-muted shrink-0">{{ $t('toolbar.diffNav') }}</span>
         <div class="flex items-center bg-primary/10 border border-primary/20 rounded-md overflow-hidden">
           <UButton icon="i-lucide-chevron-up" size="xs" variant="ghost" color="neutral" class="hover:bg-primary/30 rounded-none" @click="goPrevDiff" />
@@ -62,6 +71,7 @@
       <!-- Monaco Editor -->
       <div
         class="flex-1 relative overflow-hidden"
+        :class="{ 'editor-swapping': swapping }"
         @dragover.prevent="onDragOver"
         @dragleave="onDragLeave"
         @drop.prevent="onDrop"
@@ -73,31 +83,50 @@
           </div>
         </div>
 
-        <ClientOnly>
-          <MonacoDiffEditor
-            v-if="diff.activeFile.value"
-            ref="monacoRef"
-            :key="editorKey"
-            :left-content="diff.activeFile.value.leftContent"
-            :right-content="diff.activeFile.value.rightContent"
-            :language="diff.activeFile.value.language || 'plaintext'"
-            :read-only="false"
-            :theme="editorTheme"
-            @update:left-content="v => updateFile('leftContent', v)"
-            @update:right-content="v => updateFile('rightContent', v)"
-          />
-          <div v-else class="flex items-center justify-center h-full text-muted">
-            <div class="text-center">
-              <UIcon name="i-lucide-file-code" class="w-8 h-8 mx-auto mb-2 opacity-30" />
-              <p class="text-xs">{{ $t('editor.empty') }}</p>
+        <!-- Swap animation overlays -->
+        <template v-if="swapping">
+          <div class="absolute inset-0 z-10 swap-overlays" :class="{ 'swap-fade-out': swapPhase === 2 }">
+            <div class="absolute inset-0" style="background-color:var(--ui-bg)"></div>
+            <div class="absolute inset-0 flex pointer-events-none">
+              <div class="swap-card swap-card-left w-1/2 h-full flex flex-col items-center justify-center gap-2 border-r border-default bg-elevated">
+              <UIcon name="i-lucide-file-text" class="w-6 h-6 text-muted shrink-0" />
+              <span class="text-xs text-muted font-medium text-center px-2 truncate max-w-full">{{ swapNames.left }}</span>
+            </div>
+            <div class="swap-card swap-card-right w-1/2 h-full flex flex-col items-center justify-center gap-2 bg-elevated">
+              <UIcon name="i-lucide-file-text" class="w-6 h-6 text-muted shrink-0" />
+              <span class="text-xs text-muted font-medium text-center px-2 truncate max-w-full">{{ swapNames.right }}</span>
             </div>
           </div>
-          <template #fallback>
-            <div class="flex items-center justify-center h-full">
-              <UIcon name="i-lucide-loader-circle" class="w-5 h-5 animate-spin text-muted" />
+        </div>
+        </template>
+
+        <div class="absolute inset-0" :class="{ 'invisible': swapping }">
+          <ClientOnly>
+            <MonacoDiffEditor
+              v-if="diff.activeFile.value"
+              ref="monacoRef"
+              :key="editorKey"
+              :left-content="diff.activeFile.value.leftContent"
+              :right-content="diff.activeFile.value.rightContent"
+              :language="diff.activeFile.value.language || 'plaintext'"
+              :read-only="false"
+              :theme="editorTheme"
+              @update:left-content="v => updateFile('leftContent', v)"
+              @update:right-content="v => updateFile('rightContent', v)"
+            />
+            <div v-else class="flex items-center justify-center h-full text-muted">
+              <div class="text-center">
+                <UIcon name="i-lucide-file-code" class="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <p class="text-xs">{{ $t('editor.empty') }}</p>
+              </div>
             </div>
-          </template>
-        </ClientOnly>
+            <template #fallback>
+              <div class="flex items-center justify-center h-full">
+                <UIcon name="i-lucide-loader-circle" class="w-5 h-5 animate-spin text-muted" />
+              </div>
+            </template>
+          </ClientOnly>
+        </div>
       </div>
     </div>
   </div>
@@ -123,6 +152,33 @@ function updateFileName(v: string) {
 function updateFile(key: 'leftContent' | 'rightContent', v: string) {
   const f = diff.activeFile.value
   if (f) diff.updateFile(f.id, { [key]: v })
+}
+
+// Swap left/right with slide animation
+const swapping = ref(false)
+const swapPhase = ref(0) // 0=idle, 1=sliding, 2=fade-out
+const swapNames = ref({ left: '', right: '' })
+function swapLeftRight() {
+  if (swapping.value || !diff.activeFile.value) return
+  // Capture pre-swap names and swap data immediately
+  const f = diff.activeFile.value
+  swapNames.value = {
+    left: f.leftPath || 'Original',
+    right: f.rightPath || 'Modified',
+  }
+  diff.swapActiveFile()
+  // Start slide animation
+  swapping.value = true
+  swapPhase.value = 1
+  // After slide, start fade-out
+  setTimeout(() => {
+    swapPhase.value = 2
+  }, 600)
+  // After fade-out, hide overlays
+  setTimeout(() => {
+    swapping.value = false
+    swapPhase.value = 0
+  }, 900)
 }
 
 // Diff navigation
@@ -177,3 +233,31 @@ async function onDrop(e: DragEvent) {
   diff.handleFileDrop(side, list)
 }
 </script>
+
+<style scoped>
+@keyframes slide-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+@keyframes slide-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+
+.editor-swapping .swap-card-left {
+  animation: slide-right 0.6s ease-in-out forwards;
+}
+
+.editor-swapping .swap-card-right {
+  animation: slide-left 0.6s ease-in-out forwards;
+}
+
+.swap-overlays {
+  transition: opacity 0.3s ease-out;
+}
+
+.swap-overlays.swap-fade-out {
+  opacity: 0;
+}
+</style>

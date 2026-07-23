@@ -162,6 +162,24 @@ export function useDiff() {
     activeFileId.value = id
   }
 
+  function swapActiveFile() {
+    const f = activeFile.value
+    if (!f) return
+    const idx = files.value.findIndex(x => x.id === f.id)
+    if (idx === -1) return
+    const swapped: DiffFile = {
+      ...f,
+      leftPath: f.rightPath,
+      rightPath: f.leftPath,
+      leftContent: f.rightContent,
+      rightContent: f.leftContent,
+    }
+    files.value[idx] = swapped
+    // Keep in same position, trigger reactivity
+    files.value = [...files.value]
+    activeFileId.value = f.id
+  }
+
   function handleFileDrop(
     side: 'left' | 'right',
     droppedFiles: { name: string; content: string }[]
@@ -218,6 +236,7 @@ export function useDiff() {
     removeFile,
     setActiveFile,
     updateFile,
+    swapActiveFile,
     handleFileDrop,
     getShareData,
     loadShareData,
