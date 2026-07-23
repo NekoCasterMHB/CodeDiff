@@ -167,14 +167,16 @@ async function loadDiff() {
     const password = getPasswordFromHash()
     if (!password) throw new Error('链接中缺少解密密码（#pwd=...）。')
 
-    // Fetch all segments if this is a segmented share
+    // Fetch all segments if this has a share group
     const segments = [{ ...record }]
-    if (record.shareGroup && record.totalSegments > 1) {
-      const groupSegments = await $fetch<Array<{ id: string; encryptedData: string; iv: string; salt: string; segmentIndex: number }>>(`/api/diff/group/${record.shareGroup}`)
-      for (const seg of groupSegments) {
-        if (!segments.some(s => s.id === seg.id)) segments.push(seg)
-      }
-      segments.sort((a, b) => a.segmentIndex - b.segmentIndex)
+    if (record.shareGroup) {
+      try {
+        const groupSegments = await $fetch<Array<{ id: string; encryptedData: string; iv: string; salt: string; segmentIndex: number }>>(`/api/diff/group/${record.shareGroup}`)
+        for (const seg of groupSegments) {
+          if (!segments.some(s => s.id === seg.id)) segments.push(seg)
+        }
+        segments.sort((a, b) => a.segmentIndex - b.segmentIndex)
+      } catch { /* group fetch failed — use single record */ }
     }
 
     // Decrypt and merge all segments

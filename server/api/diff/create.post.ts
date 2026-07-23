@@ -34,19 +34,20 @@ export default defineEventHandler(async (event) => {
   const expiresAt = new Date(jstNow.getTime() - 9 * 3600_000)
   const expiresAtStr = expiresAt.toISOString()
 
-  const id = nanoid(12)
+  const id = body.id || nanoid(12)
   const db = getDB(event)
 
   const shareGroup = body.shareGroup || null
   const segmentIndex = body.segmentIndex ?? 0
   const totalSegments = body.totalSegments ?? 1
   const ownerToken = body.ownerToken || null
+  const fileId = body.fileId || null
 
   await db
     .prepare(
-      `INSERT INTO diffs (id, encrypted_data, iv, salt, file_count, expires_at, share_group, segment_index, total_segments, owner_token) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`
+      `INSERT INTO diffs (id, encrypted_data, iv, salt, file_count, file_id, expires_at, share_group, segment_index, total_segments, owner_token) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`
     )
-    .bind(id, body.encryptedData, body.iv, body.salt, body.fileCount || 1, expiresAtStr, shareGroup, segmentIndex, totalSegments, ownerToken)
+    .bind(id, body.encryptedData, body.iv, body.salt, body.fileCount || 1, fileId, expiresAtStr, shareGroup, segmentIndex, totalSegments, ownerToken)
     .run()
 
   return {

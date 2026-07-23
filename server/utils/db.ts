@@ -31,6 +31,9 @@ export async function initDB(event: any) {
   await db.exec(`CREATE INDEX IF NOT EXISTS idx_diffs_share_group ON diffs(share_group)`)
   // Migration: add owner_token column (safe to retry)
   await db.exec(`ALTER TABLE diffs ADD COLUMN owner_token TEXT`).catch(() => {})
+  // Migration: add file_id column for per-file tracking (safe to retry)
+  await db.exec(`ALTER TABLE diffs ADD COLUMN file_id TEXT`).catch(() => {})
+  await db.exec(`CREATE INDEX IF NOT EXISTS idx_diffs_file_id ON diffs(file_id)`)
 }
 
 function createLocalDB() {
@@ -42,6 +45,22 @@ function createLocalDB() {
           return {
             async first() {
               if (sql.includes('SELECT')) {
+                if (sql.includes('WHERE file_id')) {
+                  // Lookup by file_id + owner_token
+                  let found: any = null
+                  localStore.forEach((v) => {
+                    if (v.file_id === args[0] && v.owner_token === args[1]) found = v
+                  })
+                  return found
+                }
+                if (sql.includes('WHERE share_group')) {
+                  // Lookup by share_group + owner_token
+                  let found: any = null
+                  localStore.forEach((v) => {
+                    if (v.share_group === args[0] && v.owner_token === args[1]) found = v
+                  })
+                  return found
+                }
                 return localStore.get(args[0]) ?? null
               }
               return null
@@ -60,7 +79,14 @@ function createLocalDB() {
             },
             async run() {
               if (sql.includes('DELETE')) {
-                if (sql.includes('share_group')) {
+                if (sql.includes('file_id')) {
+                  // Delete by file_id + owner_token
+                  let foundKey: string | null = null
+                  localStore.forEach((v, k) => {
+                    if (v.file_id === args[0] && v.owner_token === args[1]) foundKey = k
+                  })
+                  if (foundKey) localStore.delete(foundKey)
+                } else if (sql.includes('share_group')) {
                   const groupId = args[0]
                   localStore.forEach((v, k) => {
                     if (v.share_group === groupId) localStore.delete(k)
@@ -77,13 +103,35 @@ function createLocalDB() {
                   iv: args[2],
                   salt: args[3],
                   file_count: args[4] || 1,
-                  expires_at: args[5] || null,
-                  share_group: args[6] || null,
-                  segment_index: args[7] || 0,
-                  total_segments: args[8] || 1,
-                  owner_token: args[9] || null,
+                  file_id: args[5] || null,
+                  expires_at: args[6] || null,
+                  share_group: args[7] || null,
+                  segment_index: args[8] || 0,
+                  total_segments: args[9] || 1,
+                  owner_token: args[10] || null,
                   created_at: new Date().toISOString(),
                 })
+              }
+              if (sql.includes('UPDATE')) {
+                // Update fields by file_id + owner_token
+                const oldKey = args[3] // file_id value
+                const record = args[4] // owner_token value
+                // Find the record
+                let existingKey: string | null = null
+                let existing: any = null
+                localStore.forEach((v, k) => {
+                  if (v.file_id === oldKey && v.owner_token === record) {
+                    existingKey = k
+                    existing = v
+                  }
+                })
+                if (existing && existingKey) {
+                  existing.encrypted_data = args[0]
+                  existing.iv = args[1]
+                  existing.salt = args[2]
+                  localStore.set(existingKey, existing)
+                }
+                return { success: true }
               }
               return { success: true }
             },

@@ -232,6 +232,13 @@ async function onDrop(e: DragEvent) {
   const side: 'left' | 'right' = (e.clientX - rect.left) / rect.width < 0.5 ? 'left' : 'right'
   diff.handleFileDrop(side, list)
 }
+
+// Auto-migrate old history items and fileIds on page load
+const { load: loadShareHistory, migrateMissingFields } = useShareHistory()
+onMounted(async () => {
+  await loadShareHistory()
+  await migrateMissingFields(diff.files.value)
+})
 </script>
 
 <style scoped>

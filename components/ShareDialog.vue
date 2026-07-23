@@ -10,7 +10,7 @@
               v-for="f in displayedFiles"
               :key="f.id"
               class="flex items-center gap-2 px-3 py-2 transition-colors"
-              :class="[generated ? '' : 'cursor-pointer hover:bg-elevated', fileOverLimit(f.id) && !generated ? 'opacity-50 pointer-events-none' : '']"
+              :class="[!generated ? 'cursor-pointer hover:bg-elevated' : '', fileOverLimit(f.id) && !generated ? 'opacity-50 pointer-events-none' : '']"
             >
               <UCheckbox v-if="!generated" :model-value="selectedIds.has(f.id)" :disabled="fileOverLimit(f.id)" @update:model-value="toggle(f.id)" />
               <UIcon :name="fileIcon(f.language)" class="w-3.5 h-3.5 text-muted shrink-0" />
@@ -50,7 +50,7 @@
           </div>
         </div>
 
-        <!-- Expiration (read-only after generation) -->
+        <!-- Expiration (read-only after generation, hidden when updating) -->
         <div v-if="generated" class="flex items-center gap-2 text-xs text-muted">
           <UIcon name="i-lucide-clock" class="w-3.5 h-3.5 shrink-0" />
           <span>{{ $t('share.expiresAt') }}: {{ lockedExpiresAt }}</span>
@@ -122,6 +122,24 @@ const { t } = useI18n()
 
 const open = defineModel<boolean>('open', { default: false })
 const historyOpen = ref(false)
+
+// Auto-switch between share dialog and history modal
+watch(historyOpen, (v) => {
+  if (v) {
+    open.value = false
+  } else {
+    open.value = true
+  }
+})
+
+// Track last share for update detection
+const lastShareId = useState<string>('last-share-id', () => '')
+const lastShareToken = useState<string>('last-share-token', () => '')
+const lastShareUrl = useState<string>('last-share-url', () => '')
+const lastShareGroup = useState<string>('last-share-group', () => '')
+const lastContentHash = useState<string>('last-content-hash', () => '')
+const lastExpiresAt = useState<string>('last-expires-at', () => '')
+const lastPassword = useState<string>('last-password', () => '')
 
 const MAX_FILE_SIZE = 2_000_000 // per-file estimated POST body limit
 const fileSizes = ref<Record<string, number>>({})
@@ -202,7 +220,6 @@ watch(open, (v) => {
     lockedExpiresAt.value = ''
     expiresInDays.value = 3
     selectedIds.value = new Set(filesWithContent.value.filter(f => f.leftContent !== f.rightContent).map(f => f.id))
-    // Compute sizes asynchronously — pako.deflate is fast but still off the main thread
     setTimeout(computeFileSizes, 0)
   }
 })
@@ -245,6 +262,7 @@ async function generateShare() {
         body: {
           encryptedData, iv, salt,
           fileCount: 1,
+          fileId: selectedFiles[i]!.fileId,
           expiresInDays: expiresInDays.value,
           shareGroup, segmentIndex: i, totalSegments,
           ownerToken,
@@ -258,16 +276,27 @@ async function generateShare() {
     lockedExpiresAt.value = calcExpireDate(expiresInDays.value)
     generated.value = true
 
-    // Save to share history (with ownerToken for delete authorization)
+    // Store last share info for update detection
+    lastShareId.value = firstId
+    lastShareToken.value = ownerToken
+    lastShareUrl.value = shareUrl.value
+    lastShareGroup.value = shareGroup || firstId
+    lastContentHash.value = diff.getContentHash()
+    lastExpiresAt.value = lockedExpiresAt.value
+    lastPassword.value = password
     const now = new Date()
     await addHistory({
       id: shareUrl.value.split('/view/')[1]?.split('#')[0] || crypto.randomUUID(),
       shareUrl: shareUrl.value,
       fileNames: selectedFiles.map(f => f.leftPath || f.rightPath || ''),
+      fileIds: selectedFiles.map(f => f.fileId),
       fileCount: selectedFiles.length,
       createdAt: now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       expiresAt: lockedExpiresAt.value,
       ownerToken,
+      password,
+      contentHash: diff.getContentHash(),
+      fileHashes: selectedFiles.map(f => diff.hashFileContent(f)),
     })
   } catch (err: any) {
     error.value = err.data?.statusMessage || err.message || t('share.generateFailed')

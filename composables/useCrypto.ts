@@ -155,6 +155,18 @@ export function isCryptoAvailable(): boolean {
 }
 
 /**
+ * Compute a decrypt proof hash: SHA-256(salt_base64 + "::" + password)
+ * This proves the client has the decryption password without revealing it.
+ * The server stores this hash and compares on update/delete.
+ */
+export async function computeDecryptHash(salt: string, password: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(salt + '::' + password)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  return arrayBufferToBase64(hashBuffer)
+}
+
+/**
  * Composable wrapper that returns all crypto utilities
  */
 export function useCrypto() {

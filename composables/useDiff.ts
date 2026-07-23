@@ -85,36 +85,43 @@ export function useDiff() {
   const activeFileId = useState<string>('diff-active-file', () => '1')
   const initialized = ref(false)
 
-  // Load from IndexedDB on mount
-  if (!import.meta.server && !initialized.value) {
+  // Load from IndexedDB on mount (only on editor page, not view page)
+  const route = useRoute()
+  if (!import.meta.server && !initialized.value && route.path === '/') {
     initialized.value = true
     loadFiles().then(saved => {
+      // Auto-fill fileId for files created before this feature existed
+      let needsSave = false
+      for (const f of saved) {
+        if (!f.fileId) { f.fileId = crypto.randomUUID(); needsSave = true }
+      }
       files.value = saved.length > 0
         ? saved
-        : [{ id: '1', leftPath: '', rightPath: '', leftContent: '', rightContent: '', language: 'plaintext' }]
+        : [{ id: '1', fileId: crypto.randomUUID(), leftPath: '', rightPath: '', leftContent: '', rightContent: '', language: 'plaintext' }]
       loadActiveId().then(id => {
         activeFileId.value = (id && files.value.find(f => f.id === id)) ? id : files.value[0]?.id || '1'
       })
-      // Explicit initial save
-      saveFiles(files.value)
+      // Re-save with fileIds if any were added
+      if (needsSave) saveFiles(files.value)
+      else saveFiles(files.value)
       saveActiveId(activeFileId.value)
     })
   }
 
   if (import.meta.server) {
-    files.value = [{ id: '1', leftPath: '', rightPath: '', leftContent: '', rightContent: '', language: 'plaintext' }]
+    files.value = [{ id: '1', fileId: crypto.randomUUID(), leftPath: '', rightPath: '', leftContent: '', rightContent: '', language: 'plaintext' }]
     activeFileId.value = '1'
   }
 
-  // Persist to IndexedDB on changes (debounced)
+  // Persist to IndexedDB on changes (debounced) — only on editor page
   let saveTimer: ReturnType<typeof setTimeout> | null = null
   watch(files, (v) => {
-    if (!initialized.value || v.length === 0) return
+    if (!initialized.value || v.length === 0 || route.path !== '/') return
     if (saveTimer) clearTimeout(saveTimer)
     saveTimer = setTimeout(() => saveFiles(v), 300)
   }, { deep: true })
   watch(activeFileId, (v) => {
-    if (!initialized.value) return
+    if (!initialized.value || route.path !== '/') return
     saveActiveId(v)
   })
 
@@ -126,6 +133,7 @@ export function useDiff() {
     const id = String(Date.now())
     const newFile: DiffFile = {
       id,
+      fileId: file?.fileId || crypto.randomUUID(),
       leftPath: file?.leftPath || '',
       rightPath: file?.rightPath || '',
       leftContent: file?.leftContent || '',
@@ -150,6 +158,19 @@ export function useDiff() {
 
   function setActiveFile(id: string) {
     activeFileId.value = id
+    // Debug: log file info when switching
+    const f = files.value.find(x => x.id === id)
+    if (f) {
+      console.log('[CodeDiff] switch file:', {
+        id: f.id,
+        fileId: f.fileId,
+        name: f.leftPath || f.rightPath || '(unnamed)',
+        contentHash: hashFileContent(f),
+        leftLen: f.leftContent.length,
+        rightLen: f.rightContent.length,
+        hasDiff: f.leftContent !== f.rightContent,
+      })
+    }
   }
 
   function updateFile(id: string, updates: Partial<DiffFile>) {
@@ -217,6 +238,33 @@ export function useDiff() {
     return { files: files.value.filter((f) => f.leftContent || f.rightContent) }
   }
 
+  // Generate a hash of current file contents to detect changes since last share
+  function getContentHash(): string {
+    const data = files.value
+      .filter(f => f.leftContent || f.rightContent)
+      .map(f => `${f.leftContent}|${f.rightContent}`)
+      .join('||')
+    // Simple hash using crypto API (32-bit hash, enough for comparison)
+    let hash = 0
+    for (let i = 0; i < data.length; i++) {
+      const chr = data.charCodeAt(i)
+      hash = ((hash << 5) - hash) + chr
+      hash |= 0
+    }
+    return String(hash)
+  }
+
+  function hashFileContent(file: DiffFile): string {
+    const data = `${file.leftContent || ''}|${file.rightContent || ''}`
+    let hash = 0
+    for (let i = 0; i < data.length; i++) {
+      const chr = data.charCodeAt(i)
+      hash = ((hash << 5) - hash) + chr
+      hash |= 0
+    }
+    return String(hash)
+  }
+
   function loadShareData(data: { files: DiffFile[] }) {
     files.value = data.files.map((f, i) => ({
       ...f,
@@ -240,6 +288,8 @@ export function useDiff() {
     handleFileDrop,
     getShareData,
     loadShareData,
+    getContentHash,
+    hashFileContent,
   }
 }
 

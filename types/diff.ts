@@ -4,6 +4,7 @@
 
 export interface DiffFile {
   id: string
+  fileId: string
   leftPath: string
   rightPath: string
   leftContent: string
