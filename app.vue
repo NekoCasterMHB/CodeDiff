@@ -35,7 +35,9 @@
       </template>
 
       <template #body>
-        <DiffFileList />
+        <ClientOnly>
+          <DiffFileList />
+        </ClientOnly>
       </template>
     </UHeader>
 
@@ -50,8 +52,6 @@
 </template>
 
 <script setup lang="ts">
-import type { DropdownMenuItem } from '@nuxt/ui'
-
 const colorMode = useColorMode()
 
 const { locale, locales, setLocale } = useI18n()
@@ -87,7 +87,7 @@ const currentLang = computed(() => {
   return loc.name
 })
 
-const langItems = computed<DropdownMenuItem[][]>(() => [
+const langItems = computed(() => [
   locales.value.map(loc => ({
     label: loc.name,
     icon: flagIcons[loc.code],
