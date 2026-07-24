@@ -21,7 +21,7 @@
         @click="select(file.id)"
       >
         <!-- <UIcon name="i-lucide-grip-vertical" class="w-4 h-4 shrink-0 text-muted/40 hover:text-muted drag-handle cursor-grab active:cursor-grabbing relative z-10 order-0 transition-opacity p-1 -ml-1" /> -->
-        <span v-if="hasDiff(file)" class="shrink-0 relative z-10 order-6 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-warning text-white text-[10px] font-semibold leading-none px-1">{{ file.hunkCount || diffCount(file) }}</span>
+        <span v-if="hasDiff(file)" class="shrink-0 relative z-10 order-6 inline-flex items-center justify-center min-w-4.5 h-4.5 rounded-full bg-warning text-white text-[10px] font-semibold leading-none px-1">{{ file.hunkCount || diffCount(file) }}</span>
         <UButton
           icon="i-lucide-trash-2"
           size="sm"

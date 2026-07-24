@@ -95,20 +95,24 @@ function create() {
   diffEditor.setModel({ original: originalModel, modified: modifiedModel })
 
   // Emit hunk count so the file list badge matches Monaco's diff count
-  diffEditor.onDidUpdateDiff(() => {
-    const changes = diffEditor?.getLineChanges()
+  disposables.push(diffEditor.onDidUpdateDiff(() => {
+    if (!diffEditor) return
+    const changes = diffEditor.getLineChanges()
     if (changes) emit('hunkCount', changes.length)
-  })
+  }))
 
   // Auto-reveal the first diff once rendered
-  setTimeout(() => diffEditor?.revealFirstDiff(), 100)
+  const revealTimer = setTimeout(() => diffEditor?.revealFirstDiff(), 100)
+  disposables.push({ dispose: () => clearTimeout(revealTimer) })
 
   // Highlight current diff position with yellow box
   let currentHunkDecoMod: string[] = []
   let currentHunkDecoOrig: string[] = []
   function updateCurrentHunkHighlight() {
-    const modEd = diffEditor!.getModifiedEditor()
-    const origEd = diffEditor!.getOriginalEditor()
+    if (!diffEditor) return
+    const modEd = diffEditor.getModifiedEditor()
+    const origEd = diffEditor.getOriginalEditor()
+    if (!modEd || !origEd) return
     const focusedEditor = modEd.hasTextFocus() ? modEd : origEd
     const pos = focusedEditor.getPosition()
     if (!pos) {
@@ -116,7 +120,7 @@ function create() {
       currentHunkDecoOrig = origEd.deltaDecorations(currentHunkDecoOrig, [])
       return
     }
-    const changes = diffEditor!.getLineChanges()
+    const changes = diffEditor.getLineChanges()
     if (!changes) {
       currentHunkDecoMod = modEd.deltaDecorations(currentHunkDecoMod, [])
       currentHunkDecoOrig = origEd.deltaDecorations(currentHunkDecoOrig, [])
@@ -143,11 +147,14 @@ function create() {
     currentHunkDecoMod = modEd.deltaDecorations(currentHunkDecoMod, [])
     currentHunkDecoOrig = origEd.deltaDecorations(currentHunkDecoOrig, [])
   }
-  diffEditor!.getModifiedEditor().onDidChangeCursorPosition(() => updateCurrentHunkHighlight())
-  diffEditor!.getOriginalEditor().onDidChangeCursorPosition(() => updateCurrentHunkHighlight())
-  diffEditor!.getModifiedEditor().onDidFocusEditorText(() => updateCurrentHunkHighlight())
-  diffEditor!.getOriginalEditor().onDidFocusEditorText(() => updateCurrentHunkHighlight())
-  setTimeout(updateCurrentHunkHighlight, 600)
+  disposables.push(
+    diffEditor.getModifiedEditor().onDidChangeCursorPosition(() => updateCurrentHunkHighlight()),
+    diffEditor.getOriginalEditor().onDidChangeCursorPosition(() => updateCurrentHunkHighlight()),
+    diffEditor.getModifiedEditor().onDidFocusEditorText(() => updateCurrentHunkHighlight()),
+    diffEditor.getOriginalEditor().onDidFocusEditorText(() => updateCurrentHunkHighlight()),
+  )
+  const hunkHighlightTimer = setTimeout(updateCurrentHunkHighlight, 600)
+  disposables.push({ dispose: () => clearTimeout(hunkHighlightTimer) })
 
   if (!props.readOnly) {
     let leftTimer: ReturnType<typeof setTimeout> | null = null
@@ -171,6 +178,7 @@ function sync() {
   const lang = getLang(props.language)
   const origEd = diffEditor.getOriginalEditor()
   const modEd = diffEditor.getModifiedEditor()
+  if (!origEd || !modEd) return
   if (!origEd.hasTextFocus() && originalModel.getValue() !== props.leftContent) {
     originalModel.setValue(props.leftContent)
   }

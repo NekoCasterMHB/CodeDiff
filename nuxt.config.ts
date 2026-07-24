@@ -11,7 +11,7 @@ export default defineNuxtConfig({
     port: 4040,
   },
 
-  modules: ['@nuxt/ui', '@nuxthub/core', '@nuxtjs/i18n'],
+  modules: ['@nuxt/ui', '@nuxtjs/i18n'],
 
   i18n: {
     langDir: 'locales',
@@ -32,10 +32,6 @@ export default defineNuxtConfig({
   },
 
   css: ['~/assets/css/main.css'],
-
-  hub: {
-    database: true,
-  },
 
   nitro: {
     preset: 'cloudflare-pages',

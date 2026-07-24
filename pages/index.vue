@@ -189,7 +189,7 @@ const diffNavText = ref('')
 function goNextDiff() { monacoRef.value?.getDiffEditor()?.goToDiff('next'); updateNav() }
 function goPrevDiff() { monacoRef.value?.getDiffEditor()?.goToDiff('previous'); updateNav() }
 function updateNav() {
-  const de = monacoRef.value?.getDiffEditor()
+  const de = monacoRef.value?.getDiffEditor?.() ?? null
   if (!de) { setTimeout(updateNav, 200); return }
   const changes = de.getLineChanges()
   if (!changes) { setTimeout(updateNav, 200); return }
