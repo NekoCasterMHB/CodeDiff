@@ -32,7 +32,9 @@
         </div>
       </template>
       <template #default>
-        <DiffFileList />
+        <ClientOnly>
+          <DiffFileList />
+        </ClientOnly>
       </template>
     </USidebar>
 
