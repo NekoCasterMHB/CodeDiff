@@ -39,7 +39,7 @@
     <!-- Main Content -->
     <div class="flex-1 flex flex-col min-w-0">
       <!-- Toolbar -->
-      <div class="flex items-center gap-2 h-10 px-3 border-b border-default bg-elevated shrink-0">
+      <div class="flex items-center gap-2 h-10 px-4 border-b border-default bg-elevated shrink-0">
         <UIcon name="i-lucide-file-text" class="w-4 h-4 text-muted shrink-0" />
         <UInput
           :model-value="fileName"

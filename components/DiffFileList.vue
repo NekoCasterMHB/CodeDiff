@@ -30,8 +30,8 @@
           class="opacity-0 group-hover/file:opacity-100 shrink-0 -mr-1 relative z-20 peer/delete hover:bg-red-500/20 hover:text-red-500 cursor-pointer order-5"
           @click.stop="diff.removeFile(file.id)"
         />
-        <UIcon :name="icon(file.language)" class="w-3 h-3 shrink-0 relative z-10 peer-hover/delete:hidden transition-colors duration-300 order-1" :class="diff.activeFileId.value === file.id ? 'text-primary' : 'text-muted'" />
-        <UIcon name="i-lucide-file-x-2" class="w-3 h-3 shrink-0 relative z-10 hidden peer-hover/delete:inline-block text-red-500 transition-colors duration-300 order-1" />
+        <UIcon :name="icon(file.language)" class="w-4 h-4 shrink-0 relative z-10 peer-hover/delete:hidden transition-colors duration-300 order-1" :class="diff.activeFileId.value === file.id ? 'text-primary' : 'text-muted'" />
+        <UIcon name="i-lucide-file-x-2" class="w-4 h-4 shrink-0 relative z-10 hidden peer-hover/delete:inline-block text-red-500 transition-colors duration-300 order-1" />
         <UTooltip :text="`${file.leftPath || file.rightPath || $t('diffFile.fallbackName', { index: i + 1 })} | ${$t('diffFile.diffCount', { count: file.hunkCount || diffCount(file) })} | ${$t('diffFile.diffLines', { lines: diffLines(file) })}`" :content="{ side: 'bottom' }">
           <span class="flex-1 truncate text-sm relative z-10 peer-hover/delete:line-through peer-hover/delete:text-red-500 transition-colors duration-300 order-2">{{ file.leftPath || file.rightPath || $t('diffFile.fallbackName', { index: i + 1 }) }}</span>
         </UTooltip>

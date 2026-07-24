@@ -1,6 +1,6 @@
 <template>
   <UApp>
-    <UHeader :ui="{ header: '', container: 'w-full! max-w-full!' }">
+    <UHeader :ui="{ header: '', container: 'w-full! max-w-full! px-2 sm:px-3 lg:px-4' }">
       <template #left>
         <NuxtLink to="/" class="flex items-center gap-2">
           <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -27,7 +27,7 @@
           v-if="!isViewPage"
           icon="i-lucide-share-2"
           size="sm"
-          variant="soft"
+          variant="subtle"
           @click="openShareDialog"
         >
           {{ $t('header.share') }}
