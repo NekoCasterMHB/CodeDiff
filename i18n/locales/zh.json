@@ -43,7 +43,7 @@
     "expiresAt": "过期时间",
     "createdAt": "分享时间"
   },
-  "diffFile": { "fallbackName": "文件 {index}" },
+  "diffFile": { "fallbackName": "文件 {index}", "diffCount": "差分数量: {count}", "diffLines": "差分行数: {lines}" },
   "view": {
     "files": "文件",
     "back": "返回首页",

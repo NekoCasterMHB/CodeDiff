@@ -1,13 +1,13 @@
 <template>
   <UApp>
-    <UHeader :ui="{ header: 'px-2!', container: 'w-full! max-w-full!' }">
+    <UHeader :ui="{ header: '', container: 'w-full! max-w-full!' }">
       <template #left>
-        <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-lg bg-primary flex items-center justify-center cursor-pointer" @click="navigateTo('/')">
-            <UIcon name="i-lucide-git-compare-arrows" class="w-4 h-4 text-(--ui-bg)" />
+        <NuxtLink to="/" class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <UIcon name="i-lucide-git-compare-arrows" class="w-5 h-5 text-(--ui-bg)" />
           </div>
-          <span class="font-bold text-lg cursor-pointer" @click="navigateTo('/')">CodeDiff</span>
-        </div>
+          <span class="font-bold text-lg">CodeDiff</span>
+        </NuxtLink>
       </template>
 
       <template #right>

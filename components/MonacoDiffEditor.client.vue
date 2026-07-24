@@ -24,6 +24,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   'update:leftContent': [value: string]
   'update:rightContent': [value: string]
+  hunkCount: [count: number]
 }>()
 
 const containerRef = ref<HTMLDivElement>()
@@ -93,8 +94,60 @@ function create() {
 
   diffEditor.setModel({ original: originalModel, modified: modifiedModel })
 
+  // Emit hunk count so the file list badge matches Monaco's diff count
+  diffEditor.onDidUpdateDiff(() => {
+    const changes = diffEditor?.getLineChanges()
+    if (changes) emit('hunkCount', changes.length)
+  })
+
   // Auto-reveal the first diff once rendered
   setTimeout(() => diffEditor?.revealFirstDiff(), 100)
+
+  // Highlight current diff position with yellow box
+  let currentHunkDecoMod: string[] = []
+  let currentHunkDecoOrig: string[] = []
+  function updateCurrentHunkHighlight() {
+    const modEd = diffEditor!.getModifiedEditor()
+    const origEd = diffEditor!.getOriginalEditor()
+    const focusedEditor = modEd.hasTextFocus() ? modEd : origEd
+    const pos = focusedEditor.getPosition()
+    if (!pos) {
+      currentHunkDecoMod = modEd.deltaDecorations(currentHunkDecoMod, [])
+      currentHunkDecoOrig = origEd.deltaDecorations(currentHunkDecoOrig, [])
+      return
+    }
+    const changes = diffEditor!.getLineChanges()
+    if (!changes) {
+      currentHunkDecoMod = modEd.deltaDecorations(currentHunkDecoMod, [])
+      currentHunkDecoOrig = origEd.deltaDecorations(currentHunkDecoOrig, [])
+      return
+    }
+    const decoOpt = (className: string) => ({ className, isWholeLine: true })
+    for (const c of changes) {
+      const ms = c.modifiedStartLineNumber
+      const me = c.modifiedEndLineNumber ?? ms
+      const os = c.originalStartLineNumber ?? 1
+      const oe = c.originalEndLineNumber ?? os
+      if ((pos.lineNumber >= ms && pos.lineNumber <= me) || (pos.lineNumber >= os && pos.lineNumber <= oe)) {
+        currentHunkDecoMod = modEd.deltaDecorations(currentHunkDecoMod, [{
+          range: new monaco.Range(Math.max(ms, 1), 1, Math.max(me, ms, 1) + 1, 1),
+          options: decoOpt('current-diff-hunk'),
+        }])
+        currentHunkDecoOrig = origEd.deltaDecorations(currentHunkDecoOrig, [{
+          range: new monaco.Range(Math.max(os, 1), 1, Math.max(oe, os, 1) + 1, 1),
+          options: decoOpt('current-diff-hunk'),
+        }])
+        return
+      }
+    }
+    currentHunkDecoMod = modEd.deltaDecorations(currentHunkDecoMod, [])
+    currentHunkDecoOrig = origEd.deltaDecorations(currentHunkDecoOrig, [])
+  }
+  diffEditor!.getModifiedEditor().onDidChangeCursorPosition(() => updateCurrentHunkHighlight())
+  diffEditor!.getOriginalEditor().onDidChangeCursorPosition(() => updateCurrentHunkHighlight())
+  diffEditor!.getModifiedEditor().onDidFocusEditorText(() => updateCurrentHunkHighlight())
+  diffEditor!.getOriginalEditor().onDidFocusEditorText(() => updateCurrentHunkHighlight())
+  setTimeout(updateCurrentHunkHighlight, 600)
 
   if (!props.readOnly) {
     let leftTimer: ReturnType<typeof setTimeout> | null = null
@@ -161,5 +214,11 @@ defineExpose({ getDiffEditor: () => diffEditor })
 /* Gutter: add right padding for gap between line number and code */
 .monaco-diff-editor .margin-view-overlays .line-numbers {
   padding-right: 12px !important;
+}
+
+/* Current diff position highlight */
+.current-diff-hunk {
+  border-left: 3px solid #ffc107 !important;
+  background: rgba(255, 193, 7, 0.08) !important;
 }
 </style>

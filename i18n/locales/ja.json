@@ -43,7 +43,7 @@
     "expiresAt": "期限",
     "createdAt": "共有時間"
   },
-  "diffFile": { "fallbackName": "ファイル {index}" },
+  "diffFile": { "fallbackName": "ファイル {index}", "diffCount": "差分箇所: {count}", "diffLines": "差分行数: {lines}" },
   "view": {
     "files": "ファイル",
     "back": "トップに戻る",

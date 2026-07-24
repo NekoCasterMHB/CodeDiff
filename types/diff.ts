@@ -10,6 +10,8 @@ export interface DiffFile {
   leftContent: string
   rightContent: string
   language: string
+  /** Monaco diff hunk count — persisted with file data */
+  hunkCount?: number
 }
 
 export interface SharePayload {

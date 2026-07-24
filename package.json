@@ -22,11 +22,13 @@
     "pako": "^3.0.1",
     "tailwindcss": "^4.3.2",
     "vue": "^3.5.39",
-    "vue-router": "^5.1.0"
+    "vue-router": "^5.1.0",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.117",
     "@iconify-json/simple-icons": "^1.2.90",
-    "@types/pako": "^2.0.4"
+    "@types/pako": "^2.0.4",
+    "@types/sortablejs": "^1.15.9"
   }
 }

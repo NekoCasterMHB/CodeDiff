@@ -9,6 +9,7 @@
       :ui="{
         gap: 'h-[calc(100%-var(--ui-header-height))]',
         container: 'absolute top-(--ui-header-height) bottom-0 h-[calc(100%-var(--ui-header-height))]',
+        body: 'p-0!',
       }"
     >
       <template #header>
@@ -48,7 +49,6 @@
           :ui="{ base: 'px-3 py-1' }"
           @update:model-value="updateFileName"
         />
-        <div class="flex-1" />
         <UButton icon="i-lucide-file-plus" size="xs" variant="ghost" color="neutral" @click="() => { diff.addFile() }" />
         <div class="w-px h-4 bg-border" />
         <UButton
@@ -113,6 +113,7 @@
               :theme="editorTheme"
               @update:left-content="v => updateFile('leftContent', v)"
               @update:right-content="v => updateFile('rightContent', v)"
+              @hunk-count="v => diff.setFileHunkCount(diff.activeFileId.value!, v)"
             />
             <div v-else class="flex items-center justify-center h-full text-muted">
               <div class="text-center">

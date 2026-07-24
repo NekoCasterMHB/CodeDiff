@@ -129,6 +129,12 @@ export function useDiff() {
     files.value.find((f) => f.id === activeFileId.value)
   )
 
+  /** Set the Monaco diff hunk count on a file (persisted with file data) */
+  function setFileHunkCount(fileId: string, count: number) {
+    const f = files.value.find(x => x.id === fileId)
+    if (f) f.hunkCount = count
+  }
+
   function addFile(file?: Partial<DiffFile>) {
     const id = String(Date.now())
     const newFile: DiffFile = {
@@ -158,19 +164,11 @@ export function useDiff() {
 
   function setActiveFile(id: string) {
     activeFileId.value = id
-    // Debug: log file info when switching
-    const f = files.value.find(x => x.id === id)
-    if (f) {
-      console.log('[CodeDiff] switch file:', {
-        id: f.id,
-        fileId: f.fileId,
-        name: f.leftPath || f.rightPath || '(unnamed)',
-        contentHash: hashFileContent(f),
-        leftLen: f.leftContent.length,
-        rightLen: f.rightContent.length,
-        hasDiff: f.leftContent !== f.rightContent,
-      })
-    }
+  }
+
+  function reorderFiles(fromIndex: number, toIndex: number) {
+    const [moved] = files.value.splice(fromIndex, 1)
+    files.value.splice(toIndex, 0, moved)
   }
 
   function updateFile(id: string, updates: Partial<DiffFile>) {
@@ -284,12 +282,14 @@ export function useDiff() {
     removeFile,
     setActiveFile,
     updateFile,
+    reorderFiles,
     swapActiveFile,
     handleFileDrop,
     getShareData,
     loadShareData,
     getContentHash,
     hashFileContent,
+    setFileHunkCount,
   }
 }
 

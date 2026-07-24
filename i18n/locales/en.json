@@ -43,7 +43,7 @@
     "expiresAt": "Expires at",
     "createdAt": "Shared at"
   },
-  "diffFile": { "fallbackName": "File {index}" },
+  "diffFile": { "fallbackName": "File {index}", "diffCount": "Diffs: {count}", "diffLines": "Changed lines: {lines}" },
   "view": {
     "files": "Files",
     "back": "Back to Home",
